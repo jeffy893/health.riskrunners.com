@@ -39,7 +39,7 @@ Site: https://health.riskrunners.com
 
 ## The paper
 
-The white paper this model implements is included in `paper/`: `The-Last-Will-Be-First_White-Paper.pdf` (15 pages) and `.html` (self-contained). The site links to both from the Overview tab and the footer.
+The white paper this model implements is included in `paper/`: `The-Last-Will-Be-First_White-Paper.pdf` (15 pages) and `.html` (self-contained). The site links to both from a bar above the tabs (visible on every tab) and from the footer.
 
 ## License
 
