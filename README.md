@@ -37,6 +37,10 @@ Source: https://github.com/jeffy893/riskrunners/tree/dev/2.0/models/healthcare
 
 Site: https://health.riskrunners.com
 
+## The paper
+
+The white paper this model implements is included in `paper/`: `The-Last-Will-Be-First_White-Paper.pdf` (15 pages) and `.html` (self-contained). The site links to both from the Overview tab and the footer.
+
 ## License
 
 GNU Affero General Public License v3.0. See `LICENSE`. If you run a modified version as a network service, the AGPL requires you to offer its source to the users of that service.

@@ -61,4 +61,5 @@ footer p{margin:.2rem 0}
 .footer-links svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
 .footer-compliance{margin-top:18px;font-size:.82em;color:#666}
 .footer-paper{font-size:.82em;color:#666}
+.footer-paper a{color:#2fb8a0}
 .err{color:var(--accent);font:600 .9rem system-ui,sans-serif}
