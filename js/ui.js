@@ -18,7 +18,7 @@
     return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p;
   }
   function chart(o) {
-    const W = o.w || 680, H = o.h || 270, m = { l: 58, r: 16, t: 14, b: 44 };
+    const narrow = window.innerWidth < 640, W = o.w || (narrow ? 440 : 680), H = o.h || (narrow ? 250 : 270), m = { l: 58, r: 16, t: 14, b: 44 };
     const series = o.series || [], bands = o.bands || [];
     // legend laid out in rows above the plot area
     const legend = [...series, ...bands].filter(s => s.label), lay = []; let lx = m.l, lrow = 0;
@@ -33,7 +33,7 @@
     if (x1 === x0) x1 = x0 + 1; if (y1 === y0) y1 = y0 + 1;
     const sx = x => m.l + (x - x0) / (x1 - x0) * (W - m.l - m.r), sy = y => H - m.b - (y - y0) / (y1 - y0) * (H - m.t - m.b);
     let g = '';
-    const ty = niceStep(y1 - y0, 5), tx = niceStep(x1 - x0, 6);
+    const ty = niceStep(y1 - y0, 5), tx = niceStep(x1 - x0, narrow ? 4 : 6);
     for (let v = Math.ceil(y0 / ty) * ty; v <= y1 + 1e-9; v += ty) g += `<line x1="${m.l}" x2="${W - m.r}" y1="${sy(v)}" y2="${sy(v)}" stroke="#eee"/><text x="${m.l - 6}" y="${sy(v) + 4}" font-size="11" text-anchor="end">${+v.toPrecision(4)}</text>`;
     for (let v = Math.ceil(x0 / tx) * tx; v <= x1 + 1e-9; v += tx) g += `<text x="${sx(v)}" y="${H - m.b + 16}" font-size="11" text-anchor="middle">${+v.toPrecision(4)}</text>`;
     g += `<line x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}" stroke="#333"/><line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${H - m.b}" stroke="#333"/>`;
@@ -202,7 +202,7 @@
   /* ======================= STEP 4 ======================= */
   const ST0 = [[5, 20], [6, 15], [5, 10], [7, 10], [5, 17], [5, 19]];
   (function () {
-    let h = '<table><thead><tr><th>Stage</th><th>People n</th><th>Output per person per day (before technology)</th><th>Technology multiplier</th></tr></thead><tbody>';
+    let h = '<table class="compact"><thead><tr><th>Stage</th><th>People n</th><th>Output per person per day</th><th>Technology multiplier</th></tr></thead><tbody>';
     NODES.forEach((n, i) => h += `<tr><td><b>${n}</b></td><td><input id="n4_${i}" type="number" min="1" step="1" value="${ST0[i][0]}"></td><td><input id="r4_${i}" type="number" min="0.1" step="0.5" value="${ST0[i][1]}"></td><td><input id="m4_${i}" type="number" min="0.5" max="5" step="0.1" value="1"></td></tr>`);
     $('stageedit').innerHTML = h + '</tbody></table>';
   })();
@@ -213,7 +213,7 @@
     const totalWait = r.rows.reduce((s, x) => s + x.wq, 0);
     const rows = r.rows.map((x, i) => ({ cls: i === r.bottleneck ? 'hi' : '', cells: [x.name, String(x.n), f(x.tpc, 1), f(x.cap, 1), f(x.rho * 100, 0) + '%', x.wq === Infinity ? 'unstable' : f(x.wq * 24, 1) + ' h'] }));
     // bar chart
-    const Wd = 680, Hd = 250, mx = Math.max(demand, ...r.rows.map(x => x.cap)) * 1.1, bw = 70, gap = (Wd - 70 - bw * 6) / 6;
+    const narrowBar = window.innerWidth < 640, Wd = narrowBar ? 440 : 680, Hd = 250, mx = Math.max(demand, ...r.rows.map(x => x.cap)) * 1.1, bw = narrowBar ? 50 : 70, gap = (Wd - 70 - bw * 6) / 6;
     let g = '';
     r.rows.forEach((x, i) => { const hx = x.cap / mx * 190, X = 60 + i * (bw + gap) + gap / 2; g += `<rect x="${X}" y="${215 - hx}" width="${bw}" height="${hx}" fill="${i === r.bottleneck ? COL.red : COL.blue}" opacity=".85"/><text x="${X + bw / 2}" y="${210 - hx}" font-size="11" text-anchor="middle">${f(x.cap, 0)}</text><text x="${X + bw / 2}" y="232" font-size="10" text-anchor="middle">${esc(x.name.split(' ')[0])}</text>`; });
     const yd = 215 - demand / mx * 190;
@@ -294,6 +294,29 @@
       `<div class="callout"><b>Bridge terms</b>Words used by more than one statement are candidate shared framings: ${bridge.length ? esc(bridge.join(', ')) : 'none found'}. A message built around them overlaps the most audiences.</div>`;
   };
   $('txt6').addEventListener('input', debounce(renderers.t6, 300));
+
+
+  /* ---------- mobile support ---------- */
+  // Wrap every table in a horizontally scrollable box so wide tables never push the page sideways.
+  function wrapTables(root) {
+    root.querySelectorAll('table').forEach(t => {
+      if (t.parentElement && t.parentElement.classList.contains('tscroll')) return;
+      const d = document.createElement('div'); d.className = 'tscroll';
+      t.parentNode.insertBefore(d, t); d.appendChild(t);
+    });
+  }
+  const mainEl = document.querySelector('main');
+  wrapTables(mainEl);
+  new MutationObserver(() => wrapTables(mainEl)).observe(mainEl, { childList: true, subtree: true });
+  // Charts choose their size from the screen width, so redraw when the layout class changes (rotation, resize).
+  let wasNarrow = window.innerWidth < 640;
+  window.addEventListener('resize', debounce(() => {
+    const now = window.innerWidth < 640;
+    if (now === wasNarrow) return;
+    wasNarrow = now;
+    const open = document.querySelector('.tab.on');
+    if (open && renderers[open.id] && open.id !== 't0') renderers[open.id]();
+  }, 300));
 
   show('t0');
 })();
