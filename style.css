@@ -130,6 +130,9 @@ img,svg{max-width:100%}
   .tscroll th:first-child,.tscroll td:first-child{max-width:36vw;min-width:84px;overflow-wrap:anywhere}
 }
 
+/* Overview table: the first column is the step name, so size it to the longest name (no cap, no clipping) */
+.tscroll table.plain th:first-child,.tscroll table.plain td:first-child{max-width:none;min-width:0;white-space:nowrap;overflow-wrap:normal;padding-right:.9rem}
+
 /* tables that should hug their content instead of stretching to the full width */
 table.fit{width:auto;min-width:0}
 .tscroll table.fit{min-width:0}
