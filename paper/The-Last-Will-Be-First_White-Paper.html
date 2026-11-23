@@ -75,8 +75,36 @@
     .toc{display:grid;grid-template-columns:1fr 1fr;column-gap:2rem;columns:auto;margin:1rem 0 0;break-inside:avoid;page-break-inside:avoid}
     a{color:var(--accent2);text-decoration:none}
     .toc{break-after:page;page-break-after:always}
+    .tscroll{overflow:visible;margin:0}
+    .tscroll table{min-width:0}
   }
-  @media (max-width:640px){.toc{columns:1}h1{font-size:1.8rem}}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  img,svg{max-width:100%}
+  @media screen and (max-width:760px){
+    html{font-size:16px}
+    .page{padding:1.4rem 1rem 3rem}
+    /* logo on top, title block below */
+    header.title{flex-direction:column-reverse;align-items:flex-start;gap:.9rem}
+    .logo{width:92px}
+    h1{font-size:1.75rem}
+    .subtitle{font-size:1.02rem}
+    h2{font-size:1.28rem;margin-top:2rem}
+    h3{font-size:1.05rem}
+    .meta{font-size:.8rem}
+    .abstract{padding:.8rem 1rem;margin:1.2rem 0}
+    .toc{columns:1}
+    .eq{font-size:.95rem;padding:.65rem .7rem;text-align:left;overflow-x:auto}
+    .eq .tag{float:none;display:block;text-align:right;margin-top:.2rem}
+    .callout{padding:.7rem .9rem;font-size:.95rem}
+    blockquote{margin:1rem 0;padding:.1rem .9rem}
+    /* wide tables and diagrams scroll sideways inside their own box instead of squeezing */
+    .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0}
+    .tscroll table{margin:0;min-width:560px;font-size:.82rem}
+    figure{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    figure svg{min-width:520px}
+    footer{font-size:.78rem}
+  }
+  @media screen and (max-width:380px){.logo{width:76px}h1{font-size:1.55rem}}
 </style>
 </head>
 <body>
@@ -180,14 +208,14 @@
 
 <h2 id="s5"><span class="n">5</span>Three arenas, one queue</h2>
 <p>The three source documents look at the same structure from three angles. In each, work or risk arrives, waits, and moves on, and a few constrained nodes govern the whole.</p>
-<table>
+<div class="tscroll"><table>
   <thead><tr><th>Arena</th><th>Source</th><th>What queues</th><th>Core mathematics</th></tr></thead>
   <tbody>
     <tr><td><strong>Shop floor</strong></td><td><em>Coupled Cost of Delay</em> (a hardware-integration colleague, de-identified)</td><td>Engineering tasks coupled by interfaces and dependencies</td><td>CCoD = (I − W)<sup>−1</sup> d; spectral radius of W</td></tr>
     <tr><td><strong>Finance</strong></td><td>Queueing brief for alternative-asset operations (a financial-operations colleague, de-identified)</td><td>Trades, reconciliations, NAV, KYC, approvals</td><td>λ, μ, ρ, WIP, Little’s Law; constraint analysis</td></tr>
     <tr><td><strong>Insurance and behavior</strong></td><td><em>Put Options on Loyalty</em></td><td>Individuals moving among behavioral states</td><td>Markov transition matrix; stationary π with πP = π</td></tr>
   </tbody>
-</table>
+</table></div>
 
 <h3>5.1 Shop floor: delay is a property of position</h3>
 <p>Reinertsen’s Cost of Delay assigns a value-per-time to each work item and sequences work by CoD divided by duration (the CD3 rule). That treats each item’s delay cost as independent. In hardware integration it is not: a change to one subsystem invalidates verification downstream. The coupled model puts the dependencies in a weighted matrix W and writes the total delay cost as a Leontief-style solution:</p>
@@ -240,14 +268,14 @@
 <div class="eq">System throughput = min<sub>k</sub> ( n<sub>k</sub> · TPC<sub>k</sub> )  ≤  min ( λ, min<sub>k</sub> μ<sub>k</sub> )<span class="tag">(11)</span></div>
 <p>This gives a clear investment rule: spend on the technology that raises TPC at the constraint, and weight the choice by coupling, because a node that many others depend on carries a higher coupled cost of delay (equation 6). It also explains why aggregate productivity statistics hide the problem. A stage with idle capacity looks efficient while the real limit sits elsewhere.</p>
 
-<table>
+<div class="tscroll"><table>
   <thead><tr><th>Setting</th><th>Torque is…</th><th>Typical constraint</th><th>Technology that raises TPC</th></tr></thead>
   <tbody>
     <tr><td>Shop floor</td><td>Parts and integrations completed per engineer per week</td><td>Late-found cross-domain coupling</td><td>Dependency-graph tooling that makes coupling visible</td></tr>
     <tr><td>Alternatives operations</td><td>Reconciled items, approvals or NAV steps per analyst per day</td><td>Specialist approval queues</td><td>Workflow timestamps, triage, exception automation</td></tr>
     <tr><td>Healthcare coverage</td><td>Resolved claims, authorizations and care decisions per staff member per day</td><td>Prior authorization and claims adjudication</td><td>Plan-level data and captive-owned decision rights (see §7)</td></tr>
   </tbody>
-</table>
+</table></div>
 <p>The healthcare row is a hypothesis to be tested with plan data. We have not measured it here.</p>
 
 <h2 id="s7"><span class="n">7</span>Healthcare: captive insurance as governance</h2>
