@@ -119,3 +119,13 @@ img,svg{max-width:100%}
 
 .tscroll table.compact{min-width:0}
 @media(max-width:640px){.tscroll table.compact th,.tscroll table.compact td{padding:.35rem .35rem}.tscroll table.compact input{min-width:0}}
+
+/* ---------- frozen first column in scrolling tables (the row label stays in view) ---------- */
+.tscroll th:first-child,.tscroll td:first-child{position:sticky;left:0;z-index:1;box-shadow:1px 0 0 var(--rule),4px 0 6px -4px rgba(0,0,0,.18)}
+.tscroll td:first-child{background:#fff}
+.tscroll th:first-child{background:#efece4;z-index:2}
+.tscroll tr.hi td:first-child{background:#fbe9ec}
+.tscroll tr.ok td:first-child{background:#eaf4ea}
+@media(max-width:640px){
+  .tscroll th:first-child,.tscroll td:first-child{max-width:36vw;min-width:84px;overflow-wrap:anywhere}
+}
