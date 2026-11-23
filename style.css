@@ -129,3 +129,9 @@ img,svg{max-width:100%}
 @media(max-width:640px){
   .tscroll th:first-child,.tscroll td:first-child{max-width:36vw;min-width:84px;overflow-wrap:anywhere}
 }
+
+/* tables that should hug their content instead of stretching to the full width */
+table.fit{width:auto;min-width:0}
+.tscroll table.fit{min-width:0}
+.tscroll table.fit td:first-child,.tscroll table.fit th:first-child{max-width:none;min-width:0}
+table.fit td,table.fit th{padding-right:1.4rem}

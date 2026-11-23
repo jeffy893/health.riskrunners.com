@@ -62,7 +62,7 @@
   function thin(a, max) { if (a.length <= max) return a; const k = Math.ceil(a.length / max); return a.filter((_, i) => i % k === 0); }
   function table(head, rows, opt) {
     opt = opt || {};
-    return `<table><thead><tr>${head.map((h, i) => `<th class="${i && !opt.left ? 'n' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr class="${r.cls || ''}">${(r.cells || r).map((c, i) => `<td class="${i && !opt.left ? 'n' : ''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    return `<table class="${opt.cls || ''}"><thead><tr>${head.map((h, i) => `<th class="${i && !opt.left ? 'n' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr class="${r.cls || ''}">${(r.cells || r).map((c, i) => `<td class="${i && !opt.left ? 'n' : ''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   }
   const cards = a => `<div class="cards">${a.map(c => `<div class="card ${c[3] || ''}"><span>${c[0]}</span><b>${c[1]}</b><span style="text-transform:none;letter-spacing:0">${c[2] || ''}</span></div>`).join('')}</div>`;
 
@@ -290,7 +290,7 @@
       '<h3>Most similar pairs and their shared terms</h3>' +
       table(['Pair', 'Cosine', 'Shared terms'], near.map(p => [esc(lines[p[0]][0]) + ' ↔ ' + esc(lines[p[1]][0]), f(p[2]), esc(shared(p[0], p[1]).slice(0, 6).join(', ') || '–')]), { left: true }) +
       '<h3>Least similar pairs</h3>' +
-      table(['Pair', 'Cosine'], pairs.slice(0, 4).map(p => [esc(lines[p[0]][0]) + ' ↔ ' + esc(lines[p[1]][0]), f(p[2])]), { left: true }) +
+      table(['Pair', 'Cosine'], pairs.slice(0, 4).map(p => [esc(lines[p[0]][0]) + ' ↔ ' + esc(lines[p[1]][0]), f(p[2])]), { left: true, cls: 'fit' }) +
       `<div class="callout"><b>Bridge terms</b>Words used by more than one statement are candidate shared framings: ${bridge.length ? esc(bridge.join(', ')) : 'none found'}. A message built around them overlaps the most audiences.</div>`;
   };
   $('txt6').addEventListener('input', debounce(renderers.t6, 300));
