@@ -76,10 +76,20 @@
     a{color:var(--accent2);text-decoration:none}
     .toc{break-after:page;page-break-after:always}
     .tscroll{overflow:visible;margin:0}
-    .tscroll table{min-width:0}
+    .pipe-m{display:none!important}
   }
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   img,svg{max-width:100%}
+  .pipe-m{display:none;margin:1rem auto;max-width:420px;text-align:center}
+  .pipe-m .pbox{border:2px solid;border-radius:8px;padding:.6rem .8rem;font:.9rem/1.4 system-ui,sans-serif}
+  .pipe-m .pbox b{display:block;font-size:1rem}
+  .pipe-m .pbox span{display:block}
+  .pipe-m .pbox em{display:block;font-style:normal;font-weight:600}
+  .pipe-m .ok{background:#e8f0e8;border-color:#4a7c4a}.pipe-m .ok em{color:#4a7c4a}
+  .pipe-m .mid{background:#fff4dc;border-color:#b7791f}.pipe-m .mid em{color:#b7791f}
+  .pipe-m .bad{background:#f6dfe2;border-color:#8a1c2b}.pipe-m .bad em{color:#8a1c2b}
+  .pipe-m .parrow{font-size:1.4rem;line-height:1.3;color:#333}
+  .pipe-m .pnote{font:.8rem/1.4 system-ui,sans-serif;color:var(--muted);margin-top:.6rem}
   @media screen and (max-width:760px){
     html{font-size:16px}
     .page{padding:1.4rem 1rem 3rem}
@@ -97,11 +107,22 @@
     .eq .tag{float:none;display:block;text-align:right;margin-top:.2rem}
     .callout{padding:.7rem .9rem;font-size:.95rem}
     blockquote{margin:1rem 0;padding:.1rem .9rem}
-    /* wide tables and diagrams scroll sideways inside their own box instead of squeezing */
-    .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0}
-    .tscroll table{margin:0;min-width:560px;font-size:.82rem}
-    figure{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    figure svg{min-width:520px}
+    /* tables restack into cards so every column fits the screen; no sideways scrolling */
+    .tscroll{overflow:visible;margin:1rem 0}
+    table.stack{min-width:0;border:0;background:none;font-size:.9rem}
+    table.stack thead{display:none}
+    table.stack tbody,table.stack tr,table.stack td{display:block}
+    table.stack tr{background:#fff;border:1px solid var(--rule);border-radius:6px;margin:0 0 .7rem;padding:.45rem .8rem}
+    table.stack td{border:0;border-bottom:1px dashed #e6e6e6;padding:.35rem 0}
+    table.stack td:last-child{border-bottom:0}
+    table.stack td::before{content:attr(data-label);display:block;font:700 .66rem system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.1rem}
+    table.stack td:first-child{font-size:1rem}
+    table.stack td:first-child::before{display:none}
+    /* diagrams fit the width; text inside is enlarged so it stays readable when scaled down */
+    figure svg{min-width:0;width:100%;height:auto}
+    figure.fig-wait svg text{font-size:15px}
+    .svg-d{display:none}
+    .pipe-m{display:block}
     footer{font-size:.78rem}
   }
   @media screen and (max-width:380px){.logo{width:76px}h1{font-size:1.55rem}}
@@ -183,7 +204,7 @@
 <div class="eq">L = λ × W<span class="tag">(4)</span></div>
 <p>Average backlog equals throughput times time in the system. A team that completes 40 tasks a day, with each item spending two days in the process, holds about 80 items in progress. As utilization approaches 100%, waiting time rises sharply. In a basic single-server queue the expected wait grows in proportion to 1/(1 − ρ).</p>
 
-<figure>
+<figure class="fig-wait">
 <svg viewBox="0 0 560 280" width="100%" role="img" aria-label="Waiting time rises sharply as utilization approaches 100 percent">
   <rect x="0" y="0" width="560" height="280" fill="#fff" stroke="#d9dde3"/>
   <line x1="60" y1="230" x2="520" y2="230" stroke="#333"/>
@@ -208,12 +229,12 @@
 
 <h2 id="s5"><span class="n">5</span>Three arenas, one queue</h2>
 <p>The three source documents look at the same structure from three angles. In each, work or risk arrives, waits, and moves on, and a few constrained nodes govern the whole.</p>
-<div class="tscroll"><table>
+<div class="tscroll"><table class="stack">
   <thead><tr><th>Arena</th><th>Source</th><th>What queues</th><th>Core mathematics</th></tr></thead>
   <tbody>
-    <tr><td><strong>Shop floor</strong></td><td><em>Coupled Cost of Delay</em> (a hardware-integration colleague, de-identified)</td><td>Engineering tasks coupled by interfaces and dependencies</td><td>CCoD = (I − W)<sup>−1</sup> d; spectral radius of W</td></tr>
-    <tr><td><strong>Finance</strong></td><td>Queueing brief for alternative-asset operations (a financial-operations colleague, de-identified)</td><td>Trades, reconciliations, NAV, KYC, approvals</td><td>λ, μ, ρ, WIP, Little’s Law; constraint analysis</td></tr>
-    <tr><td><strong>Insurance and behavior</strong></td><td><em>Put Options on Loyalty</em></td><td>Individuals moving among behavioral states</td><td>Markov transition matrix; stationary π with πP = π</td></tr>
+    <tr><td data-label="Arena"><strong>Shop floor</strong></td><td data-label="Source"><em>Coupled Cost of Delay</em> (a hardware-integration colleague, de-identified)</td><td data-label="What queues">Engineering tasks coupled by interfaces and dependencies</td><td data-label="Core mathematics">CCoD = (I − W)<sup>−1</sup> d; spectral radius of W</td></tr>
+    <tr><td data-label="Arena"><strong>Finance</strong></td><td data-label="Source">Queueing brief for alternative-asset operations (a financial-operations colleague, de-identified)</td><td data-label="What queues">Trades, reconciliations, NAV, KYC, approvals</td><td data-label="Core mathematics">λ, μ, ρ, WIP, Little’s Law; constraint analysis</td></tr>
+    <tr><td data-label="Arena"><strong>Insurance and behavior</strong></td><td data-label="Source"><em>Put Options on Loyalty</em></td><td data-label="What queues">Individuals moving among behavioral states</td><td data-label="Core mathematics">Markov transition matrix; stationary π with πP = π</td></tr>
   </tbody>
 </table></div>
 
@@ -228,6 +249,7 @@
 <p>The financial-operations brief shows how an alternatives manager’s operations form a chain of queues. Its worked illustration has 80 items a day entering each stage, with capacity of 100 per day for trade capture, 70 for reconciliation and 50 for approvals.</p>
 
 <figure>
+<div class="svg-d">
 <svg viewBox="0 0 640 170" width="100%" role="img" aria-label="Three-stage pipeline with demand of 80 per day and capacities of 100, 70 and 50">
   <rect width="640" height="170" fill="#fff" stroke="#d9dde3"/>
   <g font-size="12" text-anchor="middle">
@@ -242,6 +264,15 @@
   </g>
   <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#333"/></marker></defs>
 </svg>
+</div>
+<div class="pipe-m" role="img" aria-label="Three-stage pipeline with demand of 80 per day and capacities of 100, 70 and 50">
+  <div class="pbox ok"><b>Trade capture</b><span>capacity 100 / day</span><em>20% headroom</em></div>
+  <div class="parrow">&#8595;</div>
+  <div class="pbox mid"><b>Reconciliation</b><span>capacity 70 / day</span><em>below demand</em></div>
+  <div class="parrow">&#8595;</div>
+  <div class="pbox bad"><b>Approvals</b><span>capacity 50 / day</span><em>primary constraint</em></div>
+  <div class="pnote">80 items / day enter each stage. End-to-end throughput = 50 / day until approvals is fixed.</div>
+</div>
 <figcaption>Adding capacity to trade capture does not raise throughput. Source numbers are illustrative figures from the queueing brief.</figcaption>
 </figure>
 
@@ -268,12 +299,12 @@
 <div class="eq">System throughput = min<sub>k</sub> ( n<sub>k</sub> · TPC<sub>k</sub> )  ≤  min ( λ, min<sub>k</sub> μ<sub>k</sub> )<span class="tag">(11)</span></div>
 <p>This gives a clear investment rule: spend on the technology that raises TPC at the constraint, and weight the choice by coupling, because a node that many others depend on carries a higher coupled cost of delay (equation 6). It also explains why aggregate productivity statistics hide the problem. A stage with idle capacity looks efficient while the real limit sits elsewhere.</p>
 
-<div class="tscroll"><table>
+<div class="tscroll"><table class="stack">
   <thead><tr><th>Setting</th><th>Torque is…</th><th>Typical constraint</th><th>Technology that raises TPC</th></tr></thead>
   <tbody>
-    <tr><td>Shop floor</td><td>Parts and integrations completed per engineer per week</td><td>Late-found cross-domain coupling</td><td>Dependency-graph tooling that makes coupling visible</td></tr>
-    <tr><td>Alternatives operations</td><td>Reconciled items, approvals or NAV steps per analyst per day</td><td>Specialist approval queues</td><td>Workflow timestamps, triage, exception automation</td></tr>
-    <tr><td>Healthcare coverage</td><td>Resolved claims, authorizations and care decisions per staff member per day</td><td>Prior authorization and claims adjudication</td><td>Plan-level data and captive-owned decision rights (see §7)</td></tr>
+    <tr><td data-label="Setting">Shop floor</td><td data-label="Torque is…">Parts and integrations completed per engineer per week</td><td data-label="Typical constraint">Late-found cross-domain coupling</td><td data-label="Technology that raises TPC">Dependency-graph tooling that makes coupling visible</td></tr>
+    <tr><td data-label="Setting">Alternatives operations</td><td data-label="Torque is…">Reconciled items, approvals or NAV steps per analyst per day</td><td data-label="Typical constraint">Specialist approval queues</td><td data-label="Technology that raises TPC">Workflow timestamps, triage, exception automation</td></tr>
+    <tr><td data-label="Setting">Healthcare coverage</td><td data-label="Torque is…">Resolved claims, authorizations and care decisions per staff member per day</td><td data-label="Typical constraint">Prior authorization and claims adjudication</td><td data-label="Technology that raises TPC">Plan-level data and captive-owned decision rights (see §7)</td></tr>
   </tbody>
 </table></div>
 <p>The healthcare row is a hypothesis to be tested with plan data. We have not measured it here.</p>
