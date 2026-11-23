@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Torque per Capita — Risk Runners Health</title>
+<meta name="description" content="Interactive model of queues, Itô-style diffusions and captive-insurance governance for the healthcare coverage crisis. Six research steps, all in your browser.">
+<meta name="author" content="Integral Mass">
+<meta name="theme-color" content="#0f1f3d">
+
+<!-- Favicon & App Icons -->
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- Open Graph (iMessage / SMS link previews, Facebook, LinkedIn, Slack) -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://health.riskrunners.com/">
+<meta property="og:title" content="Torque per Capita — Risk Runners Health">
+<meta property="og:description" content="Interactive model of queues, Itô-style diffusions and captive-insurance governance for the healthcare coverage crisis.">
+<meta property="og:image" content="https://health.riskrunners.com/health-logo.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Risk Runners: Torque per Capita. A gear ring around a medical cross with a rising stochastic path and a queue of dots.">
+<meta property="og:site_name" content="Risk Runners Health">
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://health.riskrunners.com/">
+<meta name="twitter:title" content="Torque per Capita — Risk Runners Health">
+<meta name="twitter:description" content="Interactive model of queues, Itô-style diffusions and captive-insurance governance for the healthcare coverage crisis.">
+<meta name="twitter:image" content="https://health.riskrunners.com/health-logo.png">
+<meta name="twitter:image:alt" content="Risk Runners: Torque per Capita. A gear ring around a medical cross with a rising stochastic path and a queue of dots.">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="kicker">Risk Runners Presents · Health</div>
+    <h1>Torque per Capita: Research Agenda Model</h1>
+    <p class="sub">An interactive implementation of the six research steps in <em>The Last Will Be First and the First Will Be Last</em>. Everything runs in your browser. Nothing is uploaded.</p>
+    <div class="banner"><strong>Read this first.</strong> Every number you see is generated from <em>synthetic</em> data or placeholder assumptions. These are tools for thinking and for testing methods, not findings about any real plan, employer or person. Step 1 accepts your own timestamps so the same code can be pointed at real data.</div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs"><div class="wrap">
+  <button data-tab="t0" class="on">Overview</button>
+  <button data-tab="t1">1 · Instrument a queue</button>
+  <button data-tab="t2">2 · Fit the diffusion</button>
+  <button data-tab="t3">3 · Coupling</button>
+  <button data-tab="t4">4 · Torque per capita</button>
+  <button data-tab="t5">5 · Governance</button>
+  <button data-tab="t6">6 · Narrative</button>
+</div></nav>
+
+<main class="wrap">
+
+<!-- OVERVIEW -->
+<section id="t0" class="tab on">
+  <h2>What this does</h2>
+  <p>Each tab implements one step of the research agenda (§11 of the paper) and uses the paper's equation numbers.</p>
+  <table class="plain">
+    <tr><th>Step</th><th>Paper</th><th>What you can do here</th></tr>
+    <tr><td><a href="#" data-go="t1">1 · Instrument a queue</a></td><td>Eq. 4, Little's Law</td><td>Simulate (or paste) timestamps for one workflow, such as prior authorization. Estimate λ, μ, ρ and work in progress, and check Little's Law.</td></tr>
+    <tr><td><a href="#" data-go="t2">2 · Fit the diffusion</a></td><td>Eq. 5</td><td>Fit a reflected diffusion on the first half of the data, then compare it with the held-out second half and with a plain discrete-event simulation.</td></tr>
+    <tr><td><a href="#" data-go="t3">3 · Make coupling visible</a></td><td>Eq. 6</td><td>Edit a dependency matrix W. Compute the coupled cost of delay and the probability that its spectral radius reaches 1 as coupling grows.</td></tr>
+    <tr><td><a href="#" data-go="t4">4 · Estimate TPC</a></td><td>Eqs. 10–11</td><td>Set staff, per-person rates and technology multipliers by stage. See the constraint and test where investment raises system throughput.</td></tr>
+    <tr><td><a href="#" data-go="t5">5 · Simulate governance</a></td><td>Eq. 9</td><td>Compare three coverage designs on the full outcome distribution, including recovery after a shock. Placeholder parameters.</td></tr>
+    <tr><td><a href="#" data-go="t6">6 · Test the narrative layer</a></td><td>Eq. 12</td><td>Measure cosine similarity between statements and find where framings overlap.</td></tr>
+  </table>
+  <div class="callout warn"><b>Limits</b>Governance results in step 5 depend entirely on assumed parameters. Step 6 uses a simple word-count method, not language-model embeddings. Nothing here is medical, legal, actuarial or investment advice, and no step uses real personal data.</div>
+  <p class="small">Files: <code>js/core.js</code> holds all of the math and can be run in Node for testing. <code>js/ui.js</code> draws the charts. There are no external libraries.</p>
+</section>
+
+<!-- 1 -->
+<section id="t1" class="tab">
+  <h2>1 · Instrument one queue</h2>
+  <p>Pick one workflow (for example, prior authorization at a self-funded employer). Capture when each item arrives, when work starts, and when it ends. From those timestamps you can estimate the four measures in the paper.</p>
+  <div class="panel grid">
+    <label>Arrival rate λ (items/hour)<input id="lam" type="number" value="14" step="0.5" min="0.5"></label>
+    <label>Service rate μ per person (items/hour)<input id="mu" type="number" value="2" step="0.1" min="0.1"></label>
+    <label>People at the stage c<input id="cc" type="number" value="8" step="1" min="1" max="60"></label>
+    <label>Service-time variability (cv)<input id="cv" type="number" value="0.7" step="0.1" min="0"></label>
+    <label>Observation window (hours)<input id="Tobs" type="number" value="336" step="24" min="48" max="2000"></label>
+    <label>Random seed<input id="seed" type="number" value="42" step="1"></label>
+  </div>
+  <details><summary>Use your own timestamps instead</summary>
+    <p class="small">One item per line: <code>arrival,start,end</code>, all in hours from the start of observation. Lines that are not numbers are ignored. When this box has at least 20 valid lines, it replaces the simulation. Set "People at the stage" above to match.</p>
+    <textarea id="csv" rows="5" placeholder="0.12,0.12,0.61&#10;0.40,0.61,1.02"></textarea>
+  </details>
+  <div id="o1"></div>
+</section>
+
+<!-- 2 -->
+<section id="t2" class="tab">
+  <h2>2 · Fit the diffusion and validate it</h2>
+  <p>Parameters are estimated from the <strong>first half</strong> of the data in step 1. The model then predicts the number of items in the system over the <strong>second half</strong>. Three predictions are compared with what was observed:</p>
+  <ul class="small">
+    <li><strong>Eq. 5 as written:</strong> constant drift λ − cμ, reflected at zero.</li>
+    <li><strong>State-dependent drift:</strong> λ − μ·min(Q, c). The drift weakens when some staff are idle. This is an extension, not in the paper's text.</li>
+    <li><strong>Discrete-event baseline:</strong> a plain M/M/c simulation with the fitted λ and μ.</li>
+  </ul>
+  <div class="panel grid">
+    <label>Diffusion paths<input id="paths2" type="number" value="200" step="50" min="20" max="1000"></label>
+    <label>Baseline replications<input id="reps2" type="number" value="100" step="25" min="10" max="400"></label>
+    <label>&nbsp;<button id="run2" class="btn">Re-run</button></label>
+  </div>
+  <div id="o2"></div>
+</section>
+
+<!-- 3 -->
+<section id="t3" class="tab">
+  <h2>3 · Make coupling visible</h2>
+  <p>Equation 6: <code>CCoD = (I − W)⁻¹ d</code>. Entry W[i][j] is the share of node j's delay cost that lands on node i. Coupling grows with program time as downstream steps harden their assumptions. Edge weights are noisy, so the spectral radius of W is a random quantity, and the question is the <em>probability</em> that it reaches 1.</p>
+  <div class="panel grid">
+    <label>Coupling scale<input id="scale3" type="number" value="1.4" step="0.1" min="0.1"></label>
+    <label>Growth per month<input id="g3" type="number" value="0.05" step="0.01" min="0"></label>
+    <label>Edge noise σ<input id="s3" type="number" value="0.25" step="0.05" min="0"></label>
+    <label>Monte Carlo draws<input id="n3" type="number" value="1500" step="500" min="200" max="5000"></label>
+    <label>Milestone month<input id="m3" type="number" value="6" step="1" min="0" max="12"></label>
+    <label>&nbsp;<button id="run3" class="btn">Run</button></label>
+  </div>
+  <details open><summary>Dependency matrix W and direct delay costs d</summary><div id="wedit"></div></details>
+  <div id="o3"></div>
+</section>
+
+<!-- 4 -->
+<section id="t4" class="tab">
+  <h2>4 · Estimate torque per capita</h2>
+  <p>Equation 10: <code>TPC<sub>k</sub> = μ<sub>k</sub>(T<sub>k</sub>) / n<sub>k</sub></code>, the output per person at stage k. Equation 11: system throughput is the minimum of demand and every stage's capacity. Change the technology multiplier at a stage and watch whether system throughput moves.</p>
+  <div class="panel grid">
+    <label>Demand (items/day)<input id="dem4" type="number" value="80" step="5" min="1"></label>
+  </div>
+  <div id="stageedit"></div>
+  <div id="o4"></div>
+</section>
+
+<!-- 5 -->
+<section id="t5" class="tab">
+  <h2>5 · Simulate governance designs</h2>
+  <p>Equation 9: <code>dp = θ(p* − p)dt + σ√(p(1−p)) dB</code>, where p is the share of the covered group in cooperative, health-supporting behavior. Governance changes θ and p*. Claims cost depends on p, plus rare large claims with a heavy tail. Stop-loss caps each large claim at an attachment point, for a premium.</p>
+  <div class="callout warn"><b>Placeholders</b>Every parameter below is an assumption chosen to show how the method works. They are not estimates. Participation is voluntary in the model: it scales how much of a design's effect applies.</div>
+  <div id="govedit"></div>
+  <div class="panel grid">
+    <label>Members<input id="mem5" type="number" value="500" step="50" min="50"></label>
+    <label>Paths<input id="paths5" type="number" value="600" step="100" min="100" max="2000"></label>
+    <label>Horizon (years)<input id="yrs5" type="number" value="5" step="1" min="3" max="10"></label>
+    <label>Shock at year<input id="shy5" type="number" value="2.5" step="0.5" min="0.5"></label>
+    <label>Shock size (drop in p)<input id="sh5" type="number" value="0.25" step="0.05" min="0" max="0.6"></label>
+    <label>Large-claim rate per member-year<input id="jr5" type="number" value="0.01" step="0.005" min="0"></label>
+    <label>Stop-loss attachment ($)<input id="att5" type="number" value="150000" step="25000" min="25000"></label>
+    <label>&nbsp;<button id="run5" class="btn">Run</button></label>
+  </div>
+  <div id="o5"></div>
+</section>
+
+<!-- 6 -->
+<section id="t6" class="tab">
+  <h2>6 · Test the narrative layer</h2>
+  <p>Each statement becomes a vector of weighted word counts (TF-IDF). Cosine similarity near 0 means two statements are orthogonal: they use different vocabulary and do not point at the same ideas. Edit the statements below, one per line as <code>Label: statement</code>. The defaults are invented examples, not real quotes.</p>
+  <textarea id="txt6" rows="9"></textarea>
+  <p class="small">Limit: word overlap is a crude proxy for meaning. Two statements can disagree using the same words, or agree using different ones. A real study would use sentence embeddings.</p>
+  <div id="o6"></div>
+</section>
+
+</main>
+<!-- ===== SHARED FOOTER (adapted from wealth.riskrunners.com / street.riskrunners.com) ===== -->
+<footer>
+    <div class="brand">RISK RUNNERS HEALTH</div>
+    <p>Torque per Capita: queues, Itô calculus and captive-insurance governance for the healthcare coverage crisis</p>
+    <p style="margin-top: 8px;">A Risk Runners Project</p>
+    <div class="footer-links">
+        <a href="https://github.com/jeffy893/riskrunners/tree/dev/2.0/models/healthcare" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Risk Runners Codebase
+        </a>
+        <a href="https://jeffersonrichards.com" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.6 0H2.4C1.07 0 0 1.07 0 2.4v11.2C0 14.93 1.07 16 2.4 16h11.2c1.33 0 2.4-1.07 2.4-2.4V2.4C16 1.07 14.93 0 13.6 0zM4.75 13.6H2.4V6h2.35v7.6zM3.58 5.03a1.36 1.36 0 110-2.72 1.36 1.36 0 010 2.72zM13.6 13.6h-2.35V9.92c0-.88-.02-2.01-1.23-2.01-1.23 0-1.42.96-1.42 1.95v3.74H6.25V6h2.26v1.04h.03c.31-.6 1.08-1.23 2.22-1.23 2.38 0 2.82 1.56 2.82 3.6v4.19z"/></svg>
+            Connect with the Founder
+        </a>
+        <a href="https://www.riskrunners.com" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm5.3 4.7h-2.2c-.2-1-.6-1.9-1.1-2.6a6 6 0 013.3 2.6zM8 1.3c.7.8 1.2 1.9 1.5 3.4h-3C6.8 3.2 7.3 2.1 8 1.3zM1.5 9.3a6.4 6.4 0 010-2.6h2.6a13 13 0 000 2.6H1.5zm1.2 1.4h2.2c.2 1 .6 1.9 1.1 2.6a6 6 0 01-3.3-2.6zM4.9 4.7H2.7a6 6 0 013.3-2.6c-.5.7-.9 1.6-1.1 2.6zm3.1 10c-.7-.8-1.2-1.9-1.5-3.4h3c-.3 1.5-.8 2.6-1.5 3.4zm1.8-4.7H6.2a11.5 11.5 0 010-4h3.6a11.5 11.5 0 010 4zm.2 3.3c.5-.7.9-1.6 1.1-2.6h2.2a6 6 0 01-3.3 2.6zm1.4-4h2.6a6.4 6.4 0 000-2.6h-2.6a13 13 0 010 2.6z"/></svg>
+            Risk Runners Central Links
+        </a>
+    </div>
+    <div class="footer-compliance">Research tool built on synthetic data and placeholder assumptions. Not medical, legal, actuarial, insurance or investment advice.</div>
+    <p class="footer-paper">Companion to the white paper <em>The Last Will Be First and the First Will Be Last</em>.</p>
+    <p style="margin-top: 18px;">&copy; Integral Mass</p>
+</footer>
+<!-- ===== /SHARED FOOTER ===== -->
+
+
+<script src="js/core.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="75 90 450 450"><defs>
+  <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f1f3d"/><stop offset="1" stop-color="#1d4468"/></linearGradient>
+  <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d6f86"/><stop offset="1" stop-color="#2fb8a0"/></linearGradient>
+  <linearGradient id="green" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2e9d4a"/><stop offset="1" stop-color="#6cc63f"/></linearGradient>
+  <linearGradient id="tx" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1d6f86"/><stop offset="1" stop-color="#2fb8a0"/></linearGradient>
+  <radialGradient id="tint" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#d7ecea" stop-opacity=".9"/></radialGradient>
+  <radialGradient id="bg" cx=".3" cy=".4" r=".9"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9f1f3"/></radialGradient>
+</defs>
+<rect x="75" y="90" width="450" height="450" fill="url(#bg)"/>
+<g id="emblem">
+  <rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(0 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(20 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(40 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(60 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(80 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(100 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(120 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(140 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(160 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(180 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(200 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(220 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(240 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(260 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(280 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(300 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(320 300 315)"/><rect x="283" y="101" width="34" height="40" rx="6" fill="url(#navy)" transform="rotate(340 300 315)"/>
+  <circle cx="300" cy="315" r="196" fill="url(#navy)"/>
+  <circle cx="300" cy="315" r="170" fill="#ffffff"/>
+  <circle cx="300" cy="315" r="170" fill="url(#tint)"/>
+  <circle cx="300" cy="315" r="150" fill="none" stroke="#cfe3e3" stroke-width="3" stroke-dasharray="2 9"/>
+  <path d="M272 215 h56 v64 h64 v56 h-64 v64 h-56 v-64 h-64 v-56 h64 z" fill="url(#teal)" opacity=".95"/>
+  <g>
+    <circle cx="224" cy="440" r="9" fill="#12264a"/><circle cx="250" cy="440" r="9" fill="#12264a"/>
+    <circle cx="276" cy="440" r="9" fill="#1d6f86"/><circle cx="302" cy="440" r="9" fill="#1d8a8a"/>
+    <circle cx="328" cy="440" r="9" fill="#2fb8a0"/><circle cx="354" cy="440" r="9" fill="#3fae3f"/>
+  </g>
+  <path d="M150 400 L188 372 L214 392 L252 338 L282 356 L322 296 L356 312 L398 242" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M150 400 L188 372 L214 392 L252 338 L282 356 L322 296 L356 312 L398 242" fill="none" stroke="url(#green)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M376 232 L434 196 L422 264 Z" fill="url(#green)" stroke="#ffffff" stroke-width="6" stroke-linejoin="round"/>
+  <g fill="#ffffff" stroke="#12264a" stroke-width="4">
+    <circle cx="188" cy="372" r="8"/><circle cx="214" cy="392" r="8"/><circle cx="252" cy="338" r="8"/><circle cx="282" cy="356" r="8"/><circle cx="322" cy="296" r="8"/><circle cx="356" cy="312" r="8"/>
+  </g>
+</g></svg>
