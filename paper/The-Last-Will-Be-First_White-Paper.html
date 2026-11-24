@@ -50,6 +50,23 @@
   .refs li{font-size:.92rem}
   a{color:var(--accent2)}
   footer{margin-top:3rem;border-top:1px solid var(--rule);padding-top:1rem;font:.8rem/1.5 system-ui,sans-serif;color:var(--muted)}
+
+  /* ---- equation hover: references to an equation show it in a popover ---- */
+  @media screen{
+    .eqref{border-bottom:1.5px dotted var(--accent2);cursor:help;color:inherit;border-radius:2px}
+    .eqref:hover,.eqref:focus,.eqref.on{background:#e6eef6;outline:none}
+    .eq.flash{animation:eqflash 1.6s ease-out}
+    @keyframes eqflash{0%{background:#ffe9a8;box-shadow:0 0 0 4px #ffe9a8}100%{background:var(--code);box-shadow:none}}
+  }
+  .eq-pop{position:fixed;z-index:60;left:0;top:0;visibility:hidden;opacity:0;transition:opacity .12s;max-width:min(440px,92vw);background:#fff;border:1px solid var(--rule);border-top:3px solid var(--accent2);border-radius:6px;box-shadow:0 8px 28px rgba(15,31,61,.22);padding:.55rem .75rem .65rem;font:.85rem/1.4 system-ui,sans-serif}
+  .eq-pop.show{visibility:visible;opacity:1}
+  .eq-pop .pi{margin:.1rem 0 .35rem}
+  .eq-pop .pi+.pi{border-top:1px dashed var(--rule);padding-top:.45rem}
+  .eq-pop .pl{display:flex;justify-content:space-between;align-items:baseline;gap:.8rem;font-weight:700;color:var(--accent2);margin-bottom:.2rem}
+  .eq-pop .pl a{font-weight:600;font-size:.78rem;color:var(--accent);text-decoration:none;white-space:nowrap}
+  .eq-pop .pl a:hover{text-decoration:underline}
+  .eq-pop .eq{margin:0;font-size:1rem;padding:.5rem .6rem;text-align:left;overflow-x:auto}
+  .eq-pop .hint{font-size:.72rem;color:var(--muted);margin-top:.2rem}
   @page{size:Letter;margin:0.85in 0.9in 0.9in 0.9in}
   @media print{
     html{font-size:11pt}
@@ -76,6 +93,8 @@
     a{color:var(--accent2);text-decoration:none}
     .toc{break-after:page;page-break-after:always}
     .tscroll{overflow:visible;margin:0}
+    .eq-pop{display:none!important}
+    .eqref{border:0}
     .pipe-m{display:none!important}
   }
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -403,5 +422,116 @@
 </footer>
 
 </div>
+
+<script>
+/* Equation hover: every in-text reference such as "Equation (6)", "equations (7) and (8)" or
+   "equations (9) to (11)" shows the referenced equation(s) when hovered (or tapped on a touch screen). */
+(function () {
+  var eqs = {};
+  document.querySelectorAll('.eq').forEach(function (el) {
+    var tag = el.querySelector('.tag');
+    var m = tag && tag.textContent.match(/\((\d+)\)/);
+    if (m) { eqs[m[1]] = el; el.id = 'eq-' + m[1]; }
+  });
+
+  /* ---- 1. find references in the running text and wrap them ---- */
+  var NUM = '\\(?\\d{1,2}\\)?';
+  var RE = new RegExp('\\b([Ee]quations?)\\s+(' + NUM + '(?:\\s*(?:,|and|to|\u2013|-)\\s*' + NUM + ')*)', 'g');
+  function expand(str) {
+    var out = [], parts = str.replace(/[()]/g, '').split(/\s*(,|and|to|\u2013|-)\s*/);
+    for (var i = 0; i < parts.length; i += 2) {
+      var n = parseInt(parts[i], 10), sep = parts[i - 1];
+      if ((sep === 'to' || sep === '\u2013' || sep === '-') && out.length) {
+        for (var k = out[out.length - 1] + 1; k < n; k++) out.push(k);
+      }
+      out.push(n);
+    }
+    return out.filter(function (n) { return eqs[n]; });
+  }
+  var walker = document.createTreeWalker(document.querySelector('.page'), NodeFilter.SHOW_TEXT, {
+    acceptNode: function (n) {
+      if (!n.nodeValue || !/[Ee]quation/.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+      if (n.parentElement.closest('.eq, .eq-pop, script, style, h1, h2, h3, .toc')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  var nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function (node) {
+    var text = node.nodeValue, last = 0, m, frag = document.createDocumentFragment(), hit = false;
+    RE.lastIndex = 0;
+    while ((m = RE.exec(text))) {
+      var list = expand(m[2]); if (!list.length) continue;
+      hit = true;
+      frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      var span = document.createElement('span');
+      span.className = 'eqref'; span.tabIndex = 0; span.setAttribute('data-eqs', list.join(','));
+      span.setAttribute('aria-label', m[0] + ' (show equation)');
+      span.textContent = m[0];
+      frag.appendChild(span);
+      last = m.index + m[0].length;
+    }
+    if (hit) { frag.appendChild(document.createTextNode(text.slice(last))); node.parentNode.replaceChild(frag, node); }
+  });
+
+  /* ---- 2. the popover ---- */
+  var pop = document.createElement('div');
+  pop.className = 'eq-pop'; pop.setAttribute('role', 'tooltip');
+  document.body.appendChild(pop);
+  var current = null, hideTimer = null;
+  var canHover = window.matchMedia('(hover: hover)').matches;
+
+  function jump(n) {
+    var t = eqs[n]; if (!t) return;
+    hide();
+    t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash');
+  }
+  function show(ref) {
+    clearTimeout(hideTimer);
+    if (current) current.classList.remove('on');
+    current = ref; ref.classList.add('on');
+    var list = ref.getAttribute('data-eqs').split(',');
+    pop.innerHTML = '';
+    list.forEach(function (n) {
+      var item = document.createElement('div'); item.className = 'pi';
+      var label = document.createElement('div'); label.className = 'pl';
+      var name = document.createElement('span'); name.textContent = 'Equation (' + n + ')';
+      var go = document.createElement('a'); go.href = '#eq-' + n; go.textContent = 'Go to equation \u2193';
+      go.addEventListener('click', function (e) { e.preventDefault(); jump(n); });
+      label.appendChild(name); label.appendChild(go);
+      var copy = eqs[n].cloneNode(true);
+      copy.removeAttribute('id'); copy.classList.remove('flash');
+      var tag = copy.querySelector('.tag'); if (tag) tag.remove();
+      item.appendChild(label); item.appendChild(copy); pop.appendChild(item);
+    });
+    pop.classList.remove('show'); pop.style.left = '0px'; pop.style.top = '0px';
+    var r = ref.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+    var left = Math.min(Math.max(8, r.left), vw - pw - 8);
+    var top = r.bottom + 8; if (top + ph > vh - 8 && r.top - ph - 8 > 8) top = r.top - ph - 8;
+    pop.style.left = left + 'px'; pop.style.top = Math.max(8, top) + 'px';
+    pop.classList.add('show');
+  }
+  function hide() { pop.classList.remove('show'); if (current) { current.classList.remove('on'); current = null; } }
+  function later() { clearTimeout(hideTimer); hideTimer = setTimeout(hide, 160); }
+
+  document.querySelectorAll('.eqref').forEach(function (ref) {
+    ref.addEventListener('mouseenter', function () { if (canHover) show(ref); });
+    ref.addEventListener('mouseleave', function () { if (canHover) later(); });
+    ref.addEventListener('focus', function () { if (canHover) show(ref); });
+    ref.addEventListener('blur', later);
+    ref.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (canHover) { jump(ref.getAttribute('data-eqs').split(',')[0]); }   // desktop: hover previews, click jumps
+      else if (current === ref) hide(); else show(ref);                       // touch: tap toggles the popover
+    });
+    ref.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); if (e.key === 'Enter') jump(ref.getAttribute('data-eqs').split(',')[0]); });
+  });
+  pop.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+  pop.addEventListener('mouseleave', later);
+  document.addEventListener('click', function (e) { if (!e.target.closest('.eqref, .eq-pop')) hide(); });
+  window.addEventListener('scroll', function () { hide(); }, { passive: true });
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+})();
+</script>
 </body>
 </html>
