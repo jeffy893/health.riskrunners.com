@@ -10,7 +10,7 @@
   const debounce = (fn, ms = 250) => { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; };
 
   const NODES = ['Intake', 'Eligibility', 'Prior authorization', 'Clinical review', 'Claims adjudication', 'Payment & appeals'];
-  const COL = { red: '#8a1c2b', blue: '#1f4e79', orange: '#d9822b', green: '#2e7d32', grey: '#555', black: '#111' };
+  const COL = { red: '#8a1c2b', blue: '#1f4e79', orange: '#d9822b', green: '#2e7d32', grey: '#555', black: '#111', sky: '#2f93e6' };
 
   /* ---------- tiny SVG chart ---------- */
   function niceStep(span, n) {
@@ -133,7 +133,7 @@
       const dc = C.simulateDiffusion({ ...base, mode: 'const', seed: 5 });
       const ds = C.simulateDiffusion({ ...base, mode: 'state', seed: 6 });
       const des = C.baselineDES({ lambda: tr.lambda, mu: tr.mu, c: D.c, T: h, reps: num('reps2'), Q0, sampleEvery: 0.25 });
-      const sets = [['Observed (held-out half)', obs, COL.black], ['Eq. 5, constant drift', dc.samples, COL.orange], ['State-dependent drift', ds.samples, COL.blue], ['Discrete-event baseline', des, COL.green]];
+      const sets = [['Observed (held-out half)', obs, COL.black], ['Eq. 5, constant drift', dc.samples, COL.orange], ['State-dependent drift', ds.samples, COL.sky], ['Discrete-event baseline', des, COL.green]];
       const stat = (name, a) => { const s = C.sorted(a); return [name, f(C.mean(a)), f(C.quantile(s, 0.5), 1), f(C.quantile(s, 0.95), 1), name.startsWith('Observed') ? '–' : f(C.ks(os, s), 3)]; };
       const hi = Math.max(...sets.map(s => C.quantile(C.sorted(s[1]), 0.995))) + 1;
       const bins = Math.min(40, Math.max(12, Math.round(hi)));
@@ -141,9 +141,9 @@
       const best = [['Eq. 5, constant drift', C.ks(os, C.sorted(dc.samples))], ['State-dependent drift', C.ks(os, C.sorted(ds.samples))], ['Discrete-event baseline', C.ks(os, C.sorted(des))]].sort((a, b) => a[1] - b[1])[0];
       $('o2').innerHTML =
         cards([['Fitted drift λ−cμ', f(m), 'items/hour (negative = stable)'], ['Fitted σ²', f(sig2), 'λ·ca² + cμ·cs²'], ['Closest to observed', best[0], 'by KS distance, lower is better'], ['Starting WIP', String(Q0), 'at start of held-out half']]) +
-        chart({ series: sets.map(s => ({ pts: density(s[1], 0, hi, bins), color: s[2], label: s[0], dash: s[0].startsWith('Eq.') ? '6 4' : null })), xlabel: 'Items in system', ylabel: 'Share of time (density)', title: 'Distribution of WIP', cap: 'Distribution of the number in the system over the held-out half. Closer to the black line is a better fit.' }) +
+        chart({ series: sets.map(s => ({ pts: density(s[1], 0, hi, bins), color: s[2], label: s[0], width: s[0].startsWith('Observed') ? 3.2 : 2.4, dash: s[0].startsWith('Eq.') ? '6 4' : null })), xlabel: 'Items in system', ylabel: 'Share of time (density)', title: 'Distribution of WIP', cap: 'Distribution of the number in the system over the held-out half. Closer to the black line is a better fit.' }) +
         table(['Series', 'Mean', 'Median', 'P95', 'KS distance to observed'], sets.map(s => stat(s[0], s[1]))) +
-        chart({ h: 230, series: [{ pts: obs.slice(0, 400).map((v, i) => [i * 0.25, v]), color: COL.black, label: 'Observed' }, { pts: ds.traj.slice(0, 400).map((v, i) => [i * 0.25, v]), color: COL.blue, label: 'One diffusion path' }], xlabel: 'Hours into the held-out half', ylabel: 'Items in system', ymin: 0, title: 'Sample paths', cap: 'One realization of each. They should look alike in range and roughness, not match point for point.' }) +
+        chart({ h: 230, series: [{ pts: obs.slice(0, 400).map((v, i) => [i * 0.25, v]), color: COL.black, width: 2.6, label: 'Observed' }, { pts: ds.traj.slice(0, 400).map((v, i) => [i * 0.25, v]), color: COL.sky, width: 2, label: 'One diffusion path' }], xlabel: 'Hours into the held-out half', ylabel: 'Items in system', ymin: 0, title: 'Sample paths', cap: 'One realization of each. They should look alike in range and roughness, not match point for point.' }) +
         `<div class="callout"><b>Reading this</b>Equation 5 uses the drift λ − cμ. For a stage with c people that drift applies only when everyone is busy. When some are idle, departures slow down, so the drift is λ − μ·min(Q, c). On the synthetic default the state-dependent version tracks the observed distribution far better than eq. 5 as written, which underestimates the typical backlog. Near full utilization the two converge. For a finite horizon, the diffusion's value is that two numbers (drift and σ) replace a table of transition rates. Where it matches the baseline, it is no worse; where it does not, use the baseline.${m < 0 ? ` For reference, eq. 5 as written has a stationary mean of σ²/(2|drift|) = ${f(sig2 / (2 * -m))} items.` : ' Drift is not negative, so the queue is unstable and has no stationary distribution.'}</div>`;
     }, 20);
   };
