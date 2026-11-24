@@ -242,7 +242,7 @@
     setTimeout(() => {
       const g = { years: num('yrs5'), shockYear: num('shy5'), shock: num('sh5'), paths: Math.round(num('paths5')), members: num('mem5'), baseCost: 6000, k: 0.8, jumpRate: num('jr5'), xm: 50000, alpha: 1.8, slLoad: 1.25, sigma: 0.15, thetaBase: parseFloat($('th5_0').value), pstarBase: parseFloat($('ps5_0').value) };
       const res = DES0.map((d, i) => C.simulateGovernance({ theta: parseFloat($('th5_' + i).value), pstar: parseFloat($('ps5_' + i).value), participation: i === 0 ? 1 : parseFloat($('pa5_' + i).value), loading: parseFloat($('lo5_' + i).value), attach: $('sl5_' + i).checked ? num('att5') : null }, g, 21 + i));
-      const cols = [COL.grey, COL.blue, COL.red];
+      const cols = [COL.orange, COL.sky, COL.green];
       const fans = res.map((r, i) => chart({ w: 380, h: 250, bands: [{ upper: r.fan.map((q, w) => [w / 52, q[2]]), lower: r.fan.map((q, w) => [w / 52, q[0]]), color: cols[i] }], series: [{ pts: r.fan.map((q, w) => [w / 52, q[1]]), color: cols[i] }], xlabel: 'Year', ylabel: 'Cooperation share p', ymin: 0, ymax: 1, xmin: 0, xmax: g.years, title: DES0[i][0], cap: `<b>${esc(DES0[i][0])}</b>: median and 5–95% band` }));
       const all = res.flatMap(r => r.cost), lo = Math.min(...all) * 0.98, hi = C.quantile(C.sorted(all), 0.995) * 1.02;
       const rows = res.map((r, i) => [DES0[i][0], money(r.mean), money(r.p50), money(r.p95), money(r.p99), money(r.slPrem), f(r.recoveryWeeks, 0)]);
