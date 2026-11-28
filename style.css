@@ -138,3 +138,10 @@ table.fit{width:auto;min-width:0}
 .tscroll table.fit{min-width:0}
 .tscroll table.fit td:first-child,.tscroll table.fit th:first-child{max-width:none;min-width:0}
 table.fit td,table.fit th{padding-right:1.4rem}
+/* ---------- ethics tab ---------- */
+blockquote{margin:.8rem 0;padding:.4rem 1rem;border-left:4px solid var(--accent);background:var(--card);font-style:italic}
+blockquote cite{display:block;font:.78rem system-ui,sans-serif;font-style:normal;color:var(--muted);margin-top:.15rem}
+.principle{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:.2rem 1rem .5rem;margin:.9rem 0}
+.principle h4{margin:.7rem 0 .3rem;font-size:1.05rem;color:var(--accent2)}
+.tag{display:inline-block;font:700 .66rem system-ui,sans-serif;letter-spacing:.1em;text-transfor.tag{display:inline-block;font:700 .66rem system-ui,sans-serif;letter-spacing:.1em;text-transfor.tag{display:inline-block;font:700 .6--.tag{display:inline-block;font:700 .66rem system-ui,sans-ser.r.tag{display:inline-block;font:700 .66rem system-ui,sansn3.tag{display:inline-block;font:7(p)..tag{display:inline-block;font:700 .66rem system-ui,sans-serif;letter-spacing:.go.tag{display:inline-block;font:700 .66rem systee | Cosine similarity between statements, orthogonal pairs, bridge terms | 12 |\n| Ethics | Stand-alone page: a registered nurse's practitioner testimony beside published healthcare evidence, six principles, a pre-use checklist, references. No model code. | none (extension, not in §11) |\n")
+open(p,'w').write(s)

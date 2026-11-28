@@ -22,6 +22,7 @@ Open `index.html` in a browser. There is no build step, no server and no externa
 | 4 Torque per capita | TPC by stage, constraint, where investment raises throughput | 10, 11 |
 | 5 Governance | Compare three designs on the full outcome distribution and recovery time | 9 |
 | 6 Narrative | Cosine similarity between statements, orthogonal pairs, bridge terms | 12 |
+| Ethics | Stand-alone page: a registered nurse's practitioner testimony beside published healthcare evidence, six principles, a pre-use checklist, references. No model code. | none (extension, not in section 11) |
 
 ## Data and limits
 

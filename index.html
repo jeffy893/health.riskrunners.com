@@ -54,6 +54,7 @@
   <button data-tab="t4">4 · Torque per capita</button>
   <button data-tab="t5">5 · Governance</button>
   <button data-tab="t6">6 · Narrative</button>
+  <button data-tab="t7">Ethics</button>
 </div></nav>
 </div>
 
@@ -72,6 +73,7 @@
     <tr><td><a href="#" data-go="t5">5 · Simulate governance</a></td><td>Eq. 9</td><td>Compare three coverage designs on the full outcome distribution, including recovery after a shock. Placeholder parameters.</td></tr>
     <tr><td><a href="#" data-go="t6">6 · Test the narrative layer</a></td><td>Eq. 12</td><td>Measure cosine similarity between statements and find where framings overlap.</td></tr>
   </table>
+  <p><a href="#" data-go="t7">Ethics: the moral case for the queue</a>. A stand-alone page, outside the six research steps, that sets a registered nurse's bedside testimony beside published healthcare evidence. It needs no model run.</p>
   <div class="callout warn"><b>Limits</b>Governance results in step 5 depend entirely on assumed parameters. Step 6 uses a simple word-count method, not language-model embeddings. Nothing here is medical, legal, actuarial or investment advice, and no step uses real personal data.</div>
   <p class="small">Files: <code>js/core.js</code> holds all of the math and can be run in Node for testing. <code>js/ui.js</code> draws the charts. There are no external libraries.</p>
 </section>
@@ -167,6 +169,119 @@
   <div id="o6"></div>
 </section>
 
+<!-- ETHICS (stand-alone; no model code) -->
+<section id="t7" class="tab">
+  <h2>Ethics: the moral case for the queue</h2>
+  <p>The six steps measure queues. This page asks what the measurements are for. It is separate from the model: nothing here changes a calculation, and no calculation here proves a moral claim. It is also an extension, not part of the paper's section 11 agenda.</p>
+  <p>Each idea below is labeled by where it comes from. <span class="tag voice">Practitioner</span> marks testimony from a registered nurse partner (RN, BSN) with fifteen years across emergency care, cardiac catheterization, patient safety, tribal health and global maternal health. It is lived experience, not a study. <span class="tag evid">Evidence</span> marks a published source, listed at the bottom.</p>
+
+  <h3>The parable behind the title</h3>
+  <blockquote>"Because no one has hired us." <cite>Matthew 20:7, World English Bible</cite></blockquote>
+  <blockquote>"So the last will be first, and the first last." <cite>Matthew 20:16, World English Bible</cite></blockquote>
+  <p>The landowner hires at dawn, then goes back to the marketplace four more times. At five o'clock he finds people still standing idle and asks why. At day's end he pays them first. Three details carry over to queues:</p>
+  <ul>
+    <li>The last were overlooked, not out-argued. No one had chosen them.</li>
+    <li>The owner went to them. The burden of finding them was his.</li>
+    <li>The order of service was a deliberate act of values, made in front of everyone.</li>
+  </ul>
+  <div class="callout"><b>Practitioner</b>"The landowner didn't wait for the unhired to make their case. He went out and found them." In a system, that means the institution does the finding, and a person in the queue does not have to be fluent, connected or loud to be seen.</div>
+
+  <h3>Queue order is a moral choice</h3>
+  <p><span class="tag voice">Practitioner</span> First come, first served looks neutral. When waiting costs people differently, it favors whoever arrived first. Emergency nurses already reject it: the crushing chest pain is seen before the sprained ankle, however long the ankle has waited.</p>
+  <p><span class="tag evid">Evidence</span> Bioethics reaches the same place. Persad, Wertheimer and Emanuel (2009) review the principles used to allocate scarce interventions and treat first come, first served as a choice that needs justification, not a default. Emanuel et al. (2020) apply this to Covid-19 and give priority to those who are sickest and those most likely to benefit. The Emergency Medical Treatment and Labor Act (1986) requires a screening exam for anyone who comes to a hospital emergency department, whatever their ability to pay. Triage by acuity is law and routine practice, not a novel idea.</p>
+  <p>The model's bottleneck logic (tabs 1 and 4) says where a queue is slow. This page adds that who goes first inside the queue is a separate decision, and someone makes it whether or not they say so.</p>
+
+  <h3>Six principles, with their evidence</h3>
+
+  <div class="principle">
+    <h4>1 · Priority by verified need</h4>
+    <p>Rank by acuity, risk and cost of delay, measured from evidence, not by how well someone tells their story.</p>
+    <p><span class="tag voice">Practitioner</span> The loudest patient is rarely the sickest. The quiet one often is: the elderly man who does not want to be a bother, the woman whose heart attack feels like fatigue and who apologizes for taking a bed. Good triage goes looking for them.</p>
+    <p><span class="tag evid">Evidence</span> In a registry of 1,143,513 heart attack patients, women presented without chest pain significantly more often than men (Canto et al., 2012). A queue that listens only to the stated complaint will misread many of them. The same literature carries a caution for tab 3: Obermeyer et al. (2019) found that a widely used risk algorithm ranked patients by predicted <em>cost</em>. At the same score, Black patients were considerably sicker, because less money had been spent on their care. Correcting the proxy would raise the share of Black patients selected for extra help from 17.7% to 46.5%. If "cost of delay" is measured in dollars already spent, it can repeat the inequity it is meant to correct.</p>
+    <p class="small"><b>Untested here:</b> the claim that the loudest patient is rarely the sickest is a practitioner observation. This page cites no study for it. It is a hypothesis for real, timestamped queue data.</p>
+  </div>
+
+  <div class="principle">
+    <h4>2 · The system carries the burden of understanding</h4>
+    <p>Interpreters, outreach, plain language, and language models on the institution's side of the counter.</p>
+    <p><span class="tag voice">Practitioner</span> The longest queue in healthcare is the wait to be understood. Many patients have never had anyone help them say what they need, and the same tools can help the system listen.</p>
+    <p><span class="tag evid">Evidence</span> Flores et al. (2003) audiotaped 13 pediatric clinic visits that used a Spanish interpreter and found an average of 31 interpreter errors per visit. Errors by ad hoc interpreters (family members and staff) were more likely to carry potential clinical consequences than errors by hospital interpreters (77% vs 53%). A systematic review found that professional interpreters improve clinical care for patients with limited English proficiency (Karliner et al., 2007). Language models can fail in the same ways, so any use on this side of the counter needs the checks a human interpreter would get.</p>
+  </div>
+
+  <div class="principle">
+    <h4>3 · Measure the tail, not just the average</h4>
+    <p>Report waits for the least-served group, not only the mean.</p>
+    <p><span class="tag voice">Practitioner</span> At a tribal health clinic, the longest waits came from distance, language and earned distrust. An average hides all three.</p>
+    <p><span class="tag evid">Evidence</span> The Institute of Medicine named equity as one of six aims of quality care (2001) and documented unequal treatment by race and ethnicity (2003). Hoffman et al. (2016) found that many white medical students and residents held false beliefs about biological differences between Black and white patients, and that holding them predicted lower pain ratings for Black patients. Disparities of this kind show up in group-level results, not in the overall mean.</p>
+    <p class="small"><b>Gap in the model:</b> tabs 1 and 2 report overall λ, μ, ρ and queue length. They do not break results out by group. A per-group wait distribution (median and 90th percentile) is the most direct way to put this principle into the tool.</p>
+  </div>
+
+  <div class="principle">
+    <h4>4 · Knowing creates duty</h4>
+    <p>When the data shows who waits longest, someone owns the response.</p>
+    <p><span class="tag voice">Practitioner</span> The party that holds the data that makes a risk known inherits a duty to act. Once your own data shows who waits longest, the harm is foreseeable and a response is owed. The nurse suggests this could anchor the whole paper.</p>
+    <p><span class="tag evid">Evidence</span> Door-to-balloon time is the working example. In 1,791 patients with ST-elevation heart attack treated by angioplasty, longer ischemic time was associated with higher one-year mortality, with a risk estimate for each 30 minutes of delay (De Luca et al., 2004). Once the interval was timestamped and publicly reported, hospitals adopted strategies to shorten it (Bradley et al., 2006), and the national median fell from about 96 to about 64 minutes between 2005 and 2010 (Krumholz et al., 2011). The ANA Code of Ethics for Nurses (2015) states the duty in professional terms: nurses work to reduce health disparities.</p>
+    <p class="small"><b>A caution that strengthens the case:</b> Menees et al. (2013) followed 96,738 primary PCI admissions from 2005 to 2009. Median door-to-balloon times fell, but in-hospital mortality did not change significantly. Measuring a delay does not by itself save lives. The duty is to act on what the measurement shows, and to keep checking that the measure still tracks the outcome that matters.</p>
+  </div>
+
+  <div class="principle">
+    <h4>5 · Consent as relationship</h4>
+    <p>The people measured help govern the measurement.</p>
+    <p><span class="tag voice">Practitioner</span> In tribal health, consent means shared governance of the data, not a checkbox.</p>
+    <p><span class="tag evid">Evidence</span> The CARE Principles for Indigenous Data Governance (Carroll et al., 2020) name Collective benefit, Authority to control, Responsibility and Ethics. The Havasupai Tribe's lawsuit against the Arizona Board of Regents, settled in 2010, concerned blood samples given for diabetes research that were later used for other studies without the tribe's agreement (Harmon, 2010). Step 1 accepts your own timestamps. Before anyone pastes in real data, the people in that data should have a say in how it is used.</p>
+  </div>
+
+  <div class="principle">
+    <h4>6 · A human at the threshold</h4>
+    <p>A clinician can still see the quiet patient and move them forward.</p>
+    <p><span class="tag voice">Practitioner</span> Triage reads acuity from vital signs and risk, then a nurse looks at the person. A score can flag the quiet patient, and a person needs to be able to override it.</p>
+    <p><span class="tag evid">Evidence</span> Two findings above point the same way. Presentation varies by sex (Canto et al., 2012), and algorithms can inherit bias from their inputs (Obermeyer et al., 2019). Neither a stated complaint nor a score is enough alone.</p>
+  </div>
+
+  <h3>Before pointing any tab at real data</h3>
+  <ol>
+    <li>Which queue, and who is in it? Can the least-served people be identified without exposing them?</li>
+    <li>What is "need" measured by, and could that measure carry an old inequity, as cost did in Obermeyer et al.?</li>
+    <li>Who owns the response if the tail is long?</li>
+    <li>Have the people being measured helped shape the work?</li>
+    <li>Who can override the ranking, and how is the override recorded?</li>
+  </ol>
+
+  <h3>Limits of this page</h3>
+  <ul class="small">
+    <li>The practitioner testimony comes from one nurse. It is a source of questions, not a finding.</li>
+    <li>The reference list is a starting set. It is not a systematic review and will grow as real queue data and patient voices are added.</li>
+    <li>"Verified need" can be gamed, and any measure can encode bias. That is why principle 1 carries the Obermeyer caution.</li>
+    <li>The scripture is a moral frame, as in the paper. It is not evidence for any model result.</li>
+    <li>Open: the first real use case. It should be one queue where waits can be timestamped, the least-served are visible, and the people measured can help shape the work.</li>
+  </ul>
+
+  <h3>The last, counted and then served first</h3>
+  <blockquote>"Because you did it to one of the least of these my brothers, you did it to me." <cite>Matthew 25:40, World English Bible</cite></blockquote>
+  <p>The fluent and connected will always find the front of the line. A just system goes back to the marketplace at five o'clock for whoever is still standing there.</p>
+
+  <h3>References</h3>
+  <ol class="refs small">
+    <li>American Nurses Association. <em>Code of Ethics for Nurses with Interpretive Statements</em>. 2015.</li>
+    <li>Bradley EH, et al. Strategies for reducing the door-to-balloon time in acute myocardial infarction. <em>N Engl J Med</em>. 2006;355:2308-2320.</li>
+    <li>Canto JG, et al. Association of age and sex with myocardial infarction symptom presentation and in-hospital mortality. <em>JAMA</em>. 2012;307(8):813-822. doi:10.1001/jama.2012.199</li>
+    <li>Carroll SR, et al. The CARE Principles for Indigenous Data Governance. <em>Data Science Journal</em>. 2020;19:43.</li>
+    <li>De Luca G, et al. Time delay to treatment and mortality in primary angioplasty for acute myocardial infarction: every minute of delay counts. <em>Circulation</em>. 2004;109:1223-1225. doi:10.1161/01.CIR.0000121424.76486.20</li>
+    <li>Emanuel EJ, et al. Fair allocation of scarce medical resources in the time of Covid-19. <em>N Engl J Med</em>. 2020;382:2049-2055. doi:10.1056/NEJMsb2005114</li>
+    <li>Emergency Medical Treatment and Labor Act, 42 U.S.C. §1395dd (1986).</li>
+    <li>Flores G, et al. Errors in medical interpretation and their potential clinical consequences in pediatric encounters. <em>Pediatrics</em>. 2003;111(1):6-14. doi:10.1542/peds.111.1.6</li>
+    <li>Harmon A. Indian tribe wins fight to limit research of its DNA. <em>The New York Times</em>. April 21, 2010.</li>
+    <li>Hoffman KM, et al. Racial bias in pain assessment and treatment recommendations, and false beliefs about biological differences between blacks and whites. <em>PNAS</em>. 2016;113(16):4296-4301. doi:10.1073/pnas.1516047113</li>
+    <li>Institute of Medicine. <em>Crossing the Quality Chasm</em>. National Academy Press; 2001.</li>
+    <li>Institute of Medicine. <em>Unequal Treatment: Confronting Racial and Ethnic Disparities in Health Care</em>. National Academies Press; 2003.</li>
+    <li>Karliner LS, et al. Do professional interpreters improve clinical care for patients with limited English proficiency? A systematic review. <em>Health Serv Res</em>. 2007;42(2):727-754. doi:10.1111/j.1475-6773.2006.00629.x</li>
+    <li>Krumholz HM, et al. Improvements in door-to-balloon time in the United States, 2005 to 2010. <em>Circulation</em>. 2011;124:1038-1045. doi:10.1161/CIRCULATIONAHA.111.044107</li>
+    <li>Menees DS, et al. Door-to-balloon time and mortality among patients undergoing primary PCI. <em>N Engl J Med</em>. 2013;369:901-909. doi:10.1056/NEJMoa1208200</li>
+    <li>Obermeyer Z, et al. Dissecting racial bias in an algorithm used to manage the health of populations. <em>Science</em>. 2019;366:447-453. doi:10.1126/science.aax2342</li>
+    <li>Persad G, Wertheimer A, Emanuel EJ. Principles for allocation of scarce medical interventions. <em>Lancet</em>. 2009;373:423-431. doi:10.1016/S0140-6736(09)60137-9</li>
+    <li>World English Bible (public domain), Matthew 20:1-16 and 25:40.</li>
+  </ol>
+</section>
 </main>
 <!-- ===== SHARED FOOTER (adapted from wealth.riskrunners.com / street.riskrunners.com) ===== -->
 <footer>
