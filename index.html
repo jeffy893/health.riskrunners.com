@@ -54,6 +54,7 @@
   <button data-tab="t4">4 · Torque per capita</button>
   <button data-tab="t5">5 · Governance</button>
   <button data-tab="t6">6 · Narrative</button>
+  <button data-tab="t8">Contracting</button>
   <button data-tab="t7">Ethics</button>
 </div></nav>
 </div>
@@ -73,6 +74,7 @@
     <tr><td><a href="#" data-go="t5">5 · Simulate governance</a></td><td>Eq. 9</td><td>Compare three coverage designs on the full outcome distribution, including recovery after a shock. Placeholder parameters.</td></tr>
     <tr><td><a href="#" data-go="t6">6 · Test the narrative layer</a></td><td>Eq. 12</td><td>Measure cosine similarity between statements and find where framings overlap.</td></tr>
   </table>
+  <p><a href="#" data-go="t8">Contracting: indirect cost, pools and allocation bases</a>. A stand-alone tab with calculators that apply Chapter 9 of the contract pricing guides (pools, allocation bases, forward pricing rates) to vendor bids, estimating track records and traceability. Step 1 also uses its method to group queue items by cost driver.</p>
   <p><a href="#" data-go="t7">Ethics: the moral case for the queue</a>. A stand-alone page, outside the six research steps, that sets a registered nurse's bedside testimony beside published healthcare evidence. It needs no model run.</p>
   <div class="callout warn"><b>Limits</b>Governance results in step 5 depend entirely on assumed parameters. Step 6 uses a simple word-count method, not language-model embeddings. Nothing here is medical, legal, actuarial or investment advice, and no step uses real personal data.</div>
   <p class="small">Files: <code>js/core.js</code> holds all of the math and can be run in Node for testing. <code>js/ui.js</code> draws the charts. There are no external libraries.</p>
@@ -91,10 +93,24 @@
     <label>Random seed<input id="seed" type="number" value="42" step="1"></label>
   </div>
   <details><summary>Use your own timestamps instead</summary>
-    <p class="small">One item per line: <code>arrival,start,end</code>, all in hours from the start of observation. Lines that are not numbers are ignored. When this box has at least 20 valid lines, it replaces the simulation. Set "People at the stage" above to match.</p>
+    <p class="small">One item per line: <code>arrival,start,end</code>, all in hours from the start of observation. Add an optional fourth column with a pool name (for example <code>0.12,0.12,0.61,language assistance</code>) to group items by cost driver below. Lines that are not numbers are ignored. When this box has at least 20 valid lines, it replaces the simulation. Set "People at the stage" above to match.</p>
     <textarea id="csv" rows="5" placeholder="0.12,0.12,0.61&#10;0.40,0.61,1.02"></textarea>
   </details>
   <div id="o1"></div>
+  <h3>Who waits: group by cost driver, not by demographic</h3>
+  <p>The overall figures hide who waits longest. Group items into <strong>pools</strong> by what they ask of the system (the cost driver), then report each pool's wait distribution. This follows the pool and allocation-base method in the <a href="#" data-go="t8">Contracting tab</a>: a shared cost is divided among pools by a measured base, so the grouping rests on a stated, auditable rule.</p>
+  <details open><summary>Pool settings</summary>
+    <div class="panel grid">
+      <label>Pool names (synthetic data only, comma separated)<input id="pools1" type="text" value="Standard, Needs language assistance, Long travel distance"></label>
+      <label>Share of items in each pool<input id="wts1" type="text" value="0.6, 0.25, 0.15"></label>
+      <label>Extra hold-up for the last pool (hours, synthetic only)<input id="fr1" type="number" value="1.5" step="0.5" min="0"></label>
+      <label>Cost of one hour of waiting ($, all items)<input id="dc1" type="number" value="120" step="10" min="0"></label>
+      <label>Allocation base for the delay-cost pool
+        <select id="base1"><option value="wait">Wait-hours (who actually waited)</option><option value="service">Service-hours (who used capacity)</option><option value="items">Items (equal per item)</option></select></label>
+    </div>
+    <p class="small">With your own timestamps, the pool names come from the fourth column and the settings above for names, shares and hold-up are ignored. With synthetic data, the last pool is given an extra hold-up so you can see the tail report catch it. Real pools should be defined by drivers known at intake (channel, language assistance needed, travel distance band, case complexity, referral source), and chosen before looking at results.</p>
+  </details>
+  <div id="o1b"></div>
 </section>
 
 <!-- 2 -->
@@ -169,6 +185,118 @@
   <div id="o6"></div>
 </section>
 
+<!-- CONTRACTING -->
+<section id="t8" class="tab">
+  <h2>Contracting: forecast the indirect cost, then stay accountable to it</h2>
+  <p>Healthcare buyers (employers, plans, hospitals) contract for services that carry shared costs: intake, prior authorization, claims, call centers. Whoever prices that work has to predict an indirect cost, and the buyer has to judge whether the prediction is believable. This tab applies Chapter 9, <em>Analyzing Indirect Costs</em>, to that problem. The chapter appears to come from the AFIT and Federal Acquisition Institute <em>Contract Pricing Reference Guides</em> (Volume IV). FAR 15.404-1(a)(7) calls those guides informational, not directive. It is written from the Government analyst's side, and the method carries over to any buyer.</p>
+
+  <h3>The method in one line</h3>
+  <p><code>Indirect rate = indirect cost pool ÷ allocation base</code>. A <strong>pool</strong> is a logical group of costs that no single contract can carry alone. The <strong>base</strong> is a measure of direct effort (labor hours, labor dollars, machine hours, units) chosen because it tracks who benefits from, or consumes, the pool. A contract is charged <code>rate × its share of the base</code>.</p>
+  <table class="plain">
+    <tr><th>Chapter concept</th><th>What it means here</th></tr>
+    <tr><td>Primary and secondary pools</td><td>A vendor's overhead and G&amp;A pools. In step 1, the shared cost of delay. A secondary pool (a shared facility) is split into the primary pools first, such as 60/40 by floor space.</td></tr>
+    <tr><td>Allocation base</td><td>Direct labor dollars or hours for a vendor. Wait-hours, service-hours or items for a queue. The chapter's test: does the base represent each activity's consumption of the pooled cost?</td></tr>
+    <tr><td>Forward pricing rate</td><td>The rate used in the bid, often set years ahead. It is an estimate.</td></tr>
+    <tr><td>Billing rate, final rate</td><td>The rate used during performance, then the actual rate after the period closes. Each should be closer to the truth than the last.</td></tr>
+    <tr><td>Traceability</td><td>Every dollar in a pool, and every unit in a base, can be tied to a record. The chapter says supporting records must be "adequate to establish and maintain visibility of the indirect cost" and warns against the same cost charged both direct and indirect.</td></tr>
+  </table>
+
+  <div class="callout"><b>The author's position</b>Two points, offered as a proposed buying policy and not as something the chapter says. First, a contractor should keep full traceability of its transactions, so the client is not surprised when more allocation base is requested. Second, a contractor that consistently underbids and then asks for more should drop out of the procurement community. There is no glory in underestimates. The chapter supports the first point directly and supports the second only through its test of past estimating accuracy. It worries mostly about overstated rates, and it also warns that an overly cautious volume estimate produces "unreasonably high indirect cost rates". Accuracy, not a low number, is what earns trust.</div>
+
+  <h3>1 · Predict the rate from the volume forecast</h3>
+  <p>The chapter's four steps: estimate sales volume, estimate the base, estimate the pool, divide. Volume comes first because a pool is mostly fixed or semivariable cost. More volume spreads it thinner and lowers the rate. Less volume raises the rate. The chapter says to weight each source of expected work by its chance of becoming real: contracts in hand at 100%, and options, high-probability proposals and solicitations at lower probabilities.</p>
+  <div class="panel">
+    <label>Expected work, one source per line: <code>label, base dollars, probability of sale (0 to 1)</code>
+      <textarea id="vol8" rows="5">Contracts in hand, 6000000, 1.0
+Options likely to be exercised, 2000000, 0.6
+Proposals with high probability of success, 3000000, 0.5
+Solicitations in hand, 4000000, 0.25</textarea></label>
+    <div class="grid" style="margin-top:.6rem">
+      <label>Fixed part of the pool ($ per year)<input id="fix8" type="number" value="10000000" step="500000" min="0"></label>
+      <label>Variable part ($ per $1 of base)<input id="var8" type="number" value="2" step="0.1" min="0"></label>
+      <label>Actual base at year end ($)<input id="act8" type="number" value="7500000" step="250000" min="100000"></label>
+    </div>
+  </div>
+  <div id="o8a"></div>
+
+  <h3>2 · Check the estimating track record</h3>
+  <p>The chapter asks: "Have the offeror's estimates been accurate in the past?" It compares forward-pricing rates with the actual rates that followed and looks at both the size and the consistency of the miss. The defaults are the chapter's own manufacturing-overhead example.</p>
+  <div class="panel"><label>One period per line: <code>label, projected rate %, actual rate %</code>
+    <textarea id="hist8" rows="4">FY-3, 260.0, 254.8
+FY-2, 256.3, 251.8
+FY-1, 259.1, 254.8</textarea></label></div>
+  <div id="o8b"></div>
+
+  <h3>3 · Apply the rate to a contract</h3>
+  <p>The chapter's last step: multiply each rate by its own base only, then add G&amp;A on total input cost. Applying a rate to a cost that is not in its base is an error. The defaults reproduce the chapter's example and its total.</p>
+  <div class="panel">
+    <label>One cost element per line: <code>element, direct dollars, overhead rate %</code>
+      <textarea id="apply8" rows="4">Material, 200000, 9.6
+Engineering direct labor, 5000, 64.7
+Manufacturing direct labor, 75000, 250.8</textarea></label>
+    <div class="grid" style="margin-top:.6rem"><label>G&amp;A rate on total input cost (%)<input id="ga8" type="number" value="19" step="0.5" min="0"></label></div>
+  </div>
+  <div id="o8c"></div>
+
+  <h3>4 · Screen contractors on their record</h3>
+  <p>Given several contracts per contractor, compare the final price with the award price. FAR 15.404-1(c)(2)(iii)(A) lets the buyer compare proposed costs with the offeror's actual earlier costs. A record of growth after award is a signal that earlier bids were underestimates. The data below is invented.</p>
+  <div class="panel">
+    <label>One contract per line: <code>contractor, contract, awarded $, final $</code>
+      <textarea id="trk8" rows="8">Alpha Health Admin, C-101, 400000, 520000
+Alpha Health Admin, C-102, 250000, 310000
+Alpha Health Admin, C-103, 600000, 790000
+Alpha Health Admin, C-104, 300000, 330000
+Alpha Health Admin, C-105, 500000, 680000
+Bravo Claims Co, C-201, 450000, 462000
+Bravo Claims Co, C-202, 300000, 296000
+Bravo Claims Co, C-203, 520000, 545000
+Bravo Claims Co, C-204, 380000, 375000
+Cedar Review, C-301, 700000, 610000
+Cedar Review, C-302, 500000, 430000
+Cedar Review, C-303, 650000, 560000
+Delta Intake, C-401, 300000, 390000
+Delta Intake, C-402, 280000, 300000</textarea></label>
+    <div class="grid" style="margin-top:.6rem">
+      <label>Tolerance (± % of award)<input id="tol8" type="number" value="5" step="1" min="0"></label>
+      <label>Minimum contracts for a flag<input id="minn8" type="number" value="3" step="1" min="1"></label>
+      <label>Share of contracts outside tolerance<input id="mins8" type="number" value="60" step="5" min="1" max="100"></label>
+    </div>
+  </div>
+  <div id="o8d"></div>
+
+  <h3>5 · Test traceability</h3>
+  <p>Each charge needs a record, a type (direct or indirect) and, if indirect, the pool it belongs to. The chapter's allowability table says a cost that should have been direct must come out of the pool, and a cost that appears twice must be counted once. The data below is invented and contains deliberate flaws.</p>
+  <div class="panel"><label>One transaction per line: <code>reference, direct or indirect, pool, amount</code>
+    <textarea id="led8" rows="9">T-001, direct, , 48000
+T-002, indirect, Administrative overhead, 12000
+T-003, indirect, , 7500
+T-004, direct, , 30000
+T-004, indirect, Facilities, 30000
+T-005, indirect, Facilities, 9000
+T-006, indirect, Administrative overhead, 15500
+T-007, direct, , 41000</textarea></label></div>
+  <div id="o8e"></div>
+
+  <h3>Where this connects to the law</h3>
+  <ul class="small">
+    <li><strong>Buy-in.</strong> FAR 3.501-1 defines buying-in as submitting an offer below anticipated costs, expecting to increase the contract amount after award or to recover losses through follow-on contracts at artificially high prices. This is the behavior the author's second point targets.</li>
+    <li><strong>Cost realism.</strong> FAR 15.404-1(d) requires cost realism analysis on cost-reimbursement contracts to find the probable cost. It also permits it on some fixed-price contracts when past experience shows proposed costs led to quality or service shortfalls.</li>
+    <li><strong>Past performance and responsibility.</strong> FAR 15.305(a)(2) makes past performance one indicator of ability to perform. FAR 9.104-1(c) requires a satisfactory performance record for a contractor to be found responsible. Excluding a contractor is a formal process, and the screen in section 4 would only be an input to it.</li>
+    <li><strong>Fixed-price risk.</strong> The chapter shows that if the base falls short of the forecast, indirect costs are under-applied. On a firm fixed-price contract that loss comes out of the contractor's profit. On a cost-reimbursement contract the buyer faces unexpected rate changes, especially when a small firm loses a contract.</li>
+  </ul>
+
+  <h3>Why this matters in healthcare</h3>
+  <p>An underestimated bid for a prior-authorization or claims vendor does not stay a financial problem. When the real cost arrives, the usual responses are cuts to staffing or hours, and those lengthen the queue that people are already standing in. The <a href="#" data-go="t7">Ethics tab</a> argues that knowing creates a duty. A buyer that holds a vendor's traceable record and its estimating history knows which bids are likely to fail, and owes the people in the queue a response before the failure shows up as longer waits.</p>
+
+  <h3>Limits</h3>
+  <ul class="small">
+    <li>The chapter is a federal contracting reference. Health plans and employers are not bound by the FAR, and state and commercial rules differ. Nothing here is legal or procurement advice.</li>
+    <li>The cost structure in section 1 is a straight line (fixed plus variable). Real pools have steps and lags.</li>
+    <li>The contractor screen uses simple thresholds. Growth after award can reflect legitimate scope changes. Review the reason for each change before treating a flag as a finding.</li>
+    <li>Contractor names and figures in sections 4 and 5 are invented. The section 2 and section 3 defaults come from the chapter.</li>
+    <li>The chapter's unallowable-cost rules, constant-year dollar adjustment and pool-to-base regression are not implemented here.</li>
+  </ul>
+</section>
 <!-- ETHICS (stand-alone; no model code) -->
 <section id="t7" class="tab">
   <h2>Ethics: the moral case for the queue</h2>
@@ -213,7 +341,7 @@
     <p>Report waits for the least-served group, not only the mean.</p>
     <p><span class="tag voice">Practitioner</span> At a tribal health clinic, the longest waits came from distance, language and earned distrust. An average hides all three.</p>
     <p><span class="tag evid">Evidence</span> The Institute of Medicine named equity as one of six aims of quality care (2001) and documented unequal treatment by race and ethnicity (2003). Hoffman et al. (2016) found that many white medical students and residents held false beliefs about biological differences between Black and white patients, and that holding them predicted lower pain ratings for Black patients. Disparities of this kind show up in group-level results, not in the overall mean.</p>
-    <p class="small"><b>Gap in the model:</b> tabs 1 and 2 report overall λ, μ, ρ and queue length. They do not break results out by group. A per-group wait distribution (median and 90th percentile) is the most direct way to put this principle into the tool.</p>
+    <p class="small"><b>In the model:</b> step 1 now reports each pool's median and 90th-percentile wait. Pools are cost drivers (language assistance needed, travel distance, case complexity) and not demographic groups, and a shared delay cost is allocated across them by a stated base, using the method in the <a href="#" data-go="t8">Contracting tab</a>. Step 2 still fits the queue as a whole. Because a driver can track a demographic group, a pool's tail is a prompt to investigate and does not show who is affected.</p>
   </div>
 
   <div class="principle">

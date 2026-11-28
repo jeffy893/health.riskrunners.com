@@ -6,7 +6,7 @@
   const num = id => parseFloat($(id).value);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const f = (x, d = 2) => (x === Infinity ? '∞' : (x == null || isNaN(x)) ? '–' : Number(x).toFixed(d));
-  const money = x => '$' + Math.round(x).toLocaleString('en-US');
+  const money = x => (x < 0 ? '-$' : '$') + Math.abs(Math.round(x)).toLocaleString('en-US');
   const debounce = (fn, ms = 250) => { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; };
 
   const NODES = ['Intake', 'Eligibility', 'Prior authorization', 'Clinical review', 'Claims adjudication', 'Payment & appeals'];
@@ -80,21 +80,25 @@
   /* ======================= STEP 1 ======================= */
   let cache = null;
   function parseCSV(text) {
-    const arr = [], start = [], end = [];
+    const arr = [], start = [], end = [], lab = [];
     text.split(/\n/).forEach(line => {
       const p = line.split(/[,\t; ]+/).map(parseFloat);
-      if (p.length >= 3 && p.slice(0, 3).every(isFinite) && p[1] >= p[0] && p[2] >= p[1]) { arr.push(p[0]); start.push(p[1]); end.push(p[2]); }
+      if (p.length >= 3 && p.slice(0, 3).every(isFinite) && p[1] >= p[0] && p[2] >= p[1]) {
+        arr.push(p[0]); start.push(p[1]); end.push(p[2]);
+        const parts = line.trim().split(/[,\t;]+/); // optional 4th column: pool name
+        lab.push(parts.length >= 4 ? parts.slice(3).join(' ').trim() : '');
+      }
     });
-    return { arr, start, end };
+    return { arr, start, end, lab };
   }
   function getData() {
     const c = Math.max(1, Math.round(num('cc')));
     const user = parseCSV($('csv').value);
-    const key = JSON.stringify([num('lam'), num('mu'), c, num('cv'), num('Tobs'), num('seed'), user.arr.length, user.arr[user.arr.length - 1]]);
+    const key = JSON.stringify([num('lam'), num('mu'), c, num('cv'), num('Tobs'), num('seed'), user.arr.length, user.arr[user.arr.length - 1], user.lab.join('|')]);
     if (cache && cache.key === key) return cache;
     if (user.arr.length >= 20) {
       const T = Math.max(...user.arr);
-      cache = { key, rec: user, T, c, source: 'your data (' + user.arr.length + ' items)', truth: null };
+      cache = { key, rec: user, T, c, source: 'your data (' + user.arr.length + ' items)', truth: null, labels: user.lab };
     } else {
       const P = { lambda: num('lam'), mu: num('mu'), c, cv: num('cv'), T: num('Tobs'), seed: num('seed') };
       cache = { key, rec: C.simulateQueue(P), T: P.T, c, source: 'synthetic simulation', truth: P };
@@ -119,6 +123,43 @@
       `<div class="callout"><b>Reading this</b>Eq. 4 says average backlog L equals throughput times time in system. The last two columns should agree, and they do when timestamps are consistent. ca² and cs² are the squared variability of arrivals and service times (1.0 is Poisson or exponential). They set the volatility σ in step 2. Utilization above about 0.9 is where waiting climbs steeply.</div>`;
   };
   ['lam', 'mu', 'cc', 'cv', 'Tobs', 'seed', 'csv'].forEach(id => $(id).addEventListener('input', debounce(() => { renderers.t1(); if ($('t2').classList.contains('on')) renderers.t2(); })));
+  /* ---- step 1 extension: pools by cost driver, with a delay-cost pool allocated by a base (Contracting tab method) ---- */
+  const t1main = renderers.t1;
+  renderers.t1 = function () {
+    t1main();
+    try { renderPools(); } catch (e) { $('o1b').innerHTML = '<p class="err">Pool report failed: ' + esc(e.message) + '</p>'; }
+  };
+  function renderPools() {
+    const D = getData(), rec = D.rec, N = rec.arr.length;
+    let labels, extra = {}, note;
+    if (D.labels && D.labels.some(x => x)) {
+      labels = D.labels.map(x => x || 'Unlabeled'); note = 'Pools come from the fourth column of your data.';
+    } else if (D.truth) {
+      const names = $('pools1').value.split(',').map(x => x.trim()).filter(Boolean);
+      let w = $('wts1').value.split(',').map(parseFloat);
+      if (names.length < 2 || w.length !== names.length || w.some(x => !(x > 0))) { $('o1b').innerHTML = '<p class="err">Enter at least two pool names, with one positive share for each.</p>'; return; }
+      labels = C.assignPools(N, w, num('seed')).map(i => names[i]);
+      extra[names[names.length - 1]] = Math.max(0, num('fr1') || 0);
+      note = 'Synthetic pools. Items were assigned to pools at random, and the last pool was given an extra hold-up of ' + f(extra[names[names.length - 1]], 1) + ' hours so the report has something to find.';
+    } else {
+      $('o1b').innerHTML = '<p class="small">Add a fourth column with a pool name to your timestamps to see waits by pool.</p>'; return;
+    }
+    const rep = C.poolReport(rec, labels, extra);
+    const pool$ = rep.totalWait * Math.max(0, num('dc1') || 0), base = $('base1').value;
+    const al = C.allocateByBase(pool$, rep, base), alBy = {}; al.rows.forEach(r => alBy[r.pool] = r);
+    const baseName = { wait: 'wait-hour', service: 'service-hour', items: 'item' }[base];
+    const small = rep.rows.filter(r => r.n < 30).length;
+    const rows = rep.rows.map(r => ({ cls: r.p90Ratio >= 1.25 && r.n >= 30 ? 'hi' : '', cells: [esc(r.pool), r.n, f(r.shareItems * 100, 1) + '%', f(r.meanWait, 2), f(r.medianWait, 2), f(r.p90Wait, 2), f(r.p90Ratio, 2) + '×', f(r.shareWait * 100, 1) + '%', money(alBy[r.pool].dollars), money(alBy[r.pool].perItem)] }));
+    const worst = rep.rows[0];
+    $('o1b').innerHTML =
+      `<p class="small">${note}</p>` +
+      table(['Pool', 'Items', 'Share of items', 'Mean wait (h)', 'Median (h)', 'P90 wait (h)', 'P90 vs all items', 'Share of wait-hours', 'Delay cost allocated', 'Per item'], rows) +
+      cards([['Overall P90 wait', f(rep.overall.p90Wait, 2) + ' h', 'all items'], ['Longest-tail pool', esc(worst.pool), 'P90 ' + f(worst.p90Wait, 2) + ' h', worst.p90Ratio >= 1.25 && worst.n >= 30 ? 'bad' : ''], ['Delay-cost pool', money(pool$), f(rep.totalWait, 0) + ' wait-hours'], ['Rate', '$' + f(al.rate, 2), 'per ' + baseName]]) +
+      `<div class="callout"><b>Reading this</b>Rows are sorted by P90 wait, the wait that the slowest tenth of the pool's items exceed. Red rows have a P90 at least 1.25 times the all-item P90 (a rule of thumb, not a test). The delay-cost pool is wait-hours times the hourly cost above. Following the allocation method in the Contracting tab, the rate is the pool divided by the chosen base, and each pool is charged rate × its base. Switching the base moves the cost between pools, which is why the base must be chosen for a stated reason (consumption or benefit) and fixed before looking at results.${small ? ' ' + small + ' pool(s) have fewer than 30 items, so their tails are noisy and are not flagged.' : ''}</div>` +
+      `<div class="callout warn"><b>Limits</b>Grouping by cost driver does not prove the grouping is fair. A driver such as travel distance can still track a demographic group. If you hold demographic data under proper governance, compare pool membership against it as an audit, after the pools are fixed and not as the way pools are formed. Small pools give unstable P90 values.</div>`;
+  }
+  ['pools1', 'wts1', 'fr1', 'dc1', 'base1'].forEach(id => $(id).addEventListener('input', debounce(() => renderers.t1())));
+
 
   /* ======================= STEP 2 ======================= */
   renderers.t2 = function () {
@@ -296,6 +337,71 @@
   $('txt6').addEventListener('input', debounce(renderers.t6, 300));
 
 
+  /* ======================= CONTRACTING (chapter 9 method) ======================= */
+  const lines8 = id => $(id).value.split(/\n/).map(l => l.split(/[,\t]/).map(x => x.trim())).filter(p => p.length > 1 || (p[0] || '') !== '');
+  const pct = (x, d = 1) => (x == null || isNaN(x)) ? '–' : (x * 100).toFixed(d) + '%';
+  renderers.t8 = function () {
+    /* --- 1. volume, rate, absorption --- */
+    const vol = lines8('vol8').map(p => ({ label: p[0], base: parseFloat(p[1]), p: parseFloat(p[2]) })).filter(x => isFinite(x.base) && x.base > 0 && x.p >= 0 && x.p <= 1);
+    const F = num('fix8'), v = num('var8'), act = num('act8');
+    if (!vol.length || !isFinite(F) || !isFinite(v) || !(act > 0)) { $('o8a').innerHTML = '<p class="err">Enter at least one valid expected-work line (label, base dollars, probability 0 to 1), and the cost and actual-base values.</p>'; }
+    else {
+      const est = C.expectedVolume(vol), a = C.absorption({ fixed: F, varRate: v, baseEst: est, baseAct: act }), lost = C.rateIfLost(vol, F, v);
+      const xs = []; for (let i = 0; i <= 40; i++) xs.push(est * 2 * i / 40);
+      const sens = [0.6, 0.8, 1, 1.2, 1.4].map(k => { const b = est * k, r = C.absorption({ fixed: F, varRate: v, baseEst: est, baseAct: b }); return { cls: k === 1 ? 'ok' : (r.variance < 0 ? 'hi' : ''), cells: [Math.round(k * 100) + '% of forecast', money(b), pct(r.rateActual, 1), money(r.applied), money(r.actualPool), money(r.variance)] }; });
+      $('o8a').innerHTML =
+        table(['Source of work', 'Base ($)', 'Probability', 'Expected base ($)'], vol.map(x => [esc(x.label), money(x.base), pct(x.p, 0), money(x.base * x.p)]).concat([{ cls: 'ok', cells: ['Expected base', '', '', money(est)] }])) +
+        cards([['Forecast rate', pct(a.rate, 1), 'pool ÷ expected base'], ['Fixed share of pool', pct(a.fixedShare, 0), 'drives sensitivity'], ['Rate at actual base', pct(a.rateActual, 1), 'what the pool really cost per $ of base', Math.abs(a.rateActual - a.rate) / a.rate > 0.05 ? 'bad' : ''], ['Applied − actual pool', money(a.variance), a.variance < 0 ? 'under-absorbed' : 'over-absorbed', a.variance < 0 ? 'bad' : 'good'], ['Rate if largest source is lost', pct(lost.after, 1), 'from ' + pct(lost.before, 1)]]) +
+        chart({ series: [{ pts: xs.map(x => [x / 1e6, C.absorption({ fixed: F, varRate: v, baseEst: est, baseAct: x }).applied / 1e6]), color: COL.blue, label: 'Applied (forecast rate × base)' }, { pts: xs.map(x => [x / 1e6, (F + v * x) / 1e6]), color: COL.red, label: 'Budget (fixed + variable)' }], xlabel: 'Allocation base ($ millions)', ylabel: 'Indirect cost ($ millions)', xmin: 0, ymin: 0, title: 'Applied versus budgeted indirect cost', cap: 'The applied line passes through zero because indirect cost can only be charged against work that is performed. The budget line starts at the fixed cost. The lines cross at the forecast base. Left of that point the pool is under-applied, and right of it over-applied.' }) +
+        table(['If the base is', 'Base', 'Rate that would have been right', 'Applied at forecast rate', 'Actual pool', 'Applied − actual'], sens) +
+        `<div class="callout"><b>Reading this</b>The forecast rate is right only if the base lands on the forecast. Red rows are under-absorbed: the contractor has charged less than the pool cost, and on a fixed-price contract the gap is its loss. That gap is the moment a contractor asks for more. A buyer that sees the fixed share, the probability weights and the sensitivity table at bid time is not surprised by the request. The ${pct(a.fixedShare, 0)} fixed share is why a 20% volume miss moves the rate by ${pct(C.absorption({ fixed: F, varRate: v, baseEst: est, baseAct: est * 0.8 }).rateActual / a.rate - 1, 1)}.</div>`;
+    }
+    /* --- 2. accuracy history --- */
+    const hist = lines8('hist8').map(p => ({ label: p[0], proj: parseFloat(p[1]), actual: parseFloat(p[2]) })).filter(x => isFinite(x.proj) && x.actual > 0);
+    if (!hist.length) { $('o8b').innerHTML = '<p class="err">Enter at least one period as: label, projected rate %, actual rate %.</p>'; }
+    else {
+      const q = C.rateAccuracy(hist);
+      const verdict = q.nOver === hist.length ? 'Over-estimated every period' : q.nUnder === hist.length ? 'Under-estimated every period' : 'Mixed';
+      $('o8b').innerHTML =
+        table(['Period', 'Projected %', 'Actual %', 'Error (points)', 'Relative error'], hist.map((x, i) => ({ cls: q.errs[i] < 0 ? 'hi' : '', cells: [esc(x.label), f(x.proj, 1), f(x.actual, 1), f(x.proj - x.actual, 1), pct(q.errs[i], 2)] }))) +
+        cards([['Average relative error', pct(q.bias, 2), q.bias > 0 ? 'over-estimate' : 'under-estimate', q.bias < 0 ? 'bad' : ''], ['Average absolute error', pct(q.mae, 2), ''], ['Pattern', verdict, q.nOver + ' over, ' + q.nUnder + ' under']]) +
+        `<div class="callout"><b>Reading this</b>A positive error means the projected rate was higher than the actual rate, so customers were charged more than the cost. With the chapter's data the average over-estimate is about 1.8%, or about $101.80 charged for every $100 of cost. A negative error is an under-estimate, shown in red, and is the pattern behind requests for more money later. The test is symmetric: a contractor that pads every year is no more reliable than one that cuts every year.</div>`;
+    }
+    /* --- 3. rate application --- */
+    const els = lines8('apply8').map(p => ({ name: p[0], direct: parseFloat(p[1]), rate: parseFloat(p[2]) / 100 })).filter(x => x.name && isFinite(x.direct) && isFinite(x.rate));
+    const ga = num('ga8') / 100;
+    if (!els.length || !isFinite(ga)) { $('o8c').innerHTML = '<p class="err">Enter cost elements as: element, direct dollars, overhead rate %, and a G&amp;A rate.</p>'; }
+    else {
+      const r = C.applyRates(els, ga);
+      $('o8c').innerHTML =
+        table(['Cost element', 'Direct ($)', 'Overhead ($)', 'Subtotal ($)'], r.lines.map(l => [esc(l.name), money(l.direct), money(l.oh), money(l.direct + l.oh)]).concat([{ cls: 'ok', cells: ['Total input cost', '', '', money(r.input)] }, ['G&A @ ' + f(ga * 100, 1) + '% of total input', '', '', money(r.ga)], { cls: 'ok', cells: ['Total cost', '', '', money(r.total)] }])) +
+        `<p class="small">Indirect costs are ${pct(r.indirectShare, 0)} of this estimate. Differences between a buyer's and a seller's estimate come from two places: the rate, and the size of the base. Even with an accepted rate, a lower base gives a lower indirect cost.</p>`;
+    }
+    /* --- 4. contractor screen --- */
+    const tr = lines8('trk8').map(p => ({ who: p[0], award: parseFloat(p[2]), final: parseFloat(p[3]) })).filter(x => x.who && x.award > 0 && isFinite(x.final));
+    const o = { tol: num('tol8') / 100, minN: Math.max(1, num('minn8') || 3), minShare: (num('mins8') || 60) / 100 };
+    if (!tr.length || !isFinite(o.tol)) { $('o8d').innerHTML = '<p class="err">Enter contracts as: contractor, contract, awarded $, final $.</p>'; }
+    else {
+      const res = C.trackRecord(tr, o), lab = { under: 'Consistent under-estimator', over: 'Consistent over-estimator', ok: 'Within tolerance', short: 'Too few contracts to judge' };
+      $('o8d').innerHTML =
+        table(['Contractor', 'Contracts', 'Average change after award', 'Above tolerance', 'Below tolerance', 'Screen result'], res.map(x => ({ cls: x.flag === 'under' ? 'hi' : x.flag === 'ok' ? 'ok' : '', cells: [esc(x.who), x.n, pct(x.mean, 1), x.up + ' of ' + x.n, x.down + ' of ' + x.n, lab[x.flag]] }))) +
+        `<div class="callout warn"><b>Screen, not verdict</b>A contractor is flagged when at least ${f(o.minShare * 100, 0)}% of its contracts (and at least ${o.minN}) ended more than ${f(o.tol * 100, 0)}% away from the award price in one direction. Look at why each contract changed before relying on a flag. Scope changes the buyer requested are not underestimates. A short record is not evidence either way, and FAR 15.305(a)(2)(iv) says an offeror with no record is not to be rated favorably or unfavorably on it.</div>`;
+    }
+    /* --- 5. ledger --- */
+    const led = lines8('led8').map(p => ({ ref: p[0], type: (p[1] || '').toLowerCase(), pool: p[2] || '', amount: parseFloat(p[3]) })).filter(x => x.ref && (x.type === 'direct' || x.type === 'indirect') && isFinite(x.amount));
+    if (!led.length) { $('o8e').innerHTML = '<p class="err">Enter transactions as: reference, direct or indirect, pool, amount.</p>'; }
+    else {
+      const L = C.ledgerCheck(led), pl = [...L.pools.entries()];
+      const issues = [];
+      L.noPool.forEach(r => issues.push([esc(r.ref), 'Indirect charge with no pool', money(r.amount)]));
+      const seen = new Set(); L.dup.forEach(r => { if (!seen.has(r.ref)) { seen.add(r.ref); const amt = L.dup.filter(x => x.ref === r.ref).reduce((a, x) => a + x.amount, 0); issues.push([esc(r.ref), 'Charged as both a direct and an indirect cost (possible double charge)', money(amt)]); } });
+      $('o8e').innerHTML =
+        cards([['Total charged', money(L.total), led.length + ' lines'], ['Untraceable or doubled', money(L.untraced), pct(L.share, 1) + ' of total', L.share > 0 ? 'bad' : 'good'], ['Pools used', pl.length, pl.map(x => esc(x[0])).join(', ')]]) +
+        (issues.length ? table(['Reference', 'Issue', 'Amount'], issues, { left: false }) : '<p class="small">No issues found by these two checks.</p>') +
+        `<div class="callout"><b>Reading this</b>Two checks only: an indirect charge needs a named pool, and one reference cannot appear as both a direct and an indirect cost (the chapter's "erroneous double charges"). Untraceable and doubled dollars are shown together, so a line can be counted once in the total even when it breaks both rules. A buyer that can follow every dollar from pool to contract is the buyer that is not surprised later.</div>`;
+    }
+  };
+  ['vol8', 'fix8', 'var8', 'act8', 'hist8', 'apply8', 'ga8', 'trk8', 'tol8', 'minn8', 'mins8', 'led8'].forEach(id => $(id).addEventListener('input', debounce(() => renderers.t8(), 200)));
   /* ---------- mobile support ---------- */
   // Wrap every table in a horizontally scrollable box so wide tables never push the page sideways.
   function wrapTables(root) {

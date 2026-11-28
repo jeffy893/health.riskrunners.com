@@ -275,5 +275,88 @@
     return na && nb ? dot / Math.sqrt(na * nb) : 0;
   };
 
+  /* ===== Pools, allocation bases and indirect-rate analysis =====
+     Method follows Chapter 9 "Analyzing Indirect Costs" (pool / allocation base = rate; forward pricing, billing and final rates).
+     Used by step 1 (grouping queue items by cost driver) and by the Contracting tab. */
+  C.assignPools = function (n, weights, seed) { // seeded assignment of n items to pools by weight
+    const r = C.rng(seed), tot = weights.reduce((a, b) => a + b, 0), out = new Array(n);
+    for (let i = 0; i < n; i++) { let u = r() * tot, k = 0; while (k < weights.length - 1 && u >= weights[k]) { u -= weights[k]; k++; } out[i] = k; }
+    return out;
+  };
+  // rec = {arr,start,end}; labels[i] = pool name for item i; extra = {poolName: hoursAdded} (synthetic friction only)
+  C.poolReport = function (rec, labels, extra) {
+    extra = extra || {};
+    const by = new Map(); let W = 0, S = 0;
+    const allW = [];
+    for (let i = 0; i < rec.arr.length; i++) {
+      const p = labels[i] || 'Unlabeled';
+      if (!by.has(p)) by.set(p, { pool: p, w: [], service: 0, wait: 0 });
+      const o = by.get(p), w = rec.start[i] - rec.arr[i] + (extra[p] || 0), s = rec.end[i] - rec.start[i];
+      o.w.push(w); o.service += s; o.wait += w; W += w; S += s; allW.push(w);
+    }
+    const N = rec.arr.length, sAll = C.sorted(allW), p90All = C.quantile(sAll, 0.9);
+    const rows = [...by.values()].map(o => {
+      const s = C.sorted(o.w);
+      return { pool: o.pool, n: o.w.length, shareItems: o.w.length / N, meanWait: C.mean(o.w), medianWait: C.quantile(s, 0.5), p90Wait: C.quantile(s, 0.9),
+        p90Ratio: p90All > 0 ? C.quantile(s, 0.9) / p90All : NaN, waitHours: o.wait, serviceHours: o.service, shareWait: W ? o.wait / W : 0, shareService: S ? o.service / S : 0 };
+    });
+    rows.sort((a, b) => b.p90Wait - a.p90Wait);
+    return { rows, N, totalWait: W, totalService: S, overall: { meanWait: C.mean(allW), medianWait: C.quantile(sAll, 0.5), p90Wait: p90All } };
+  };
+  // Allocate a pool of dollars across rows by a base ('items' | 'service' | 'wait'). rate = pool / total base.
+  C.allocateByBase = function (poolDollars, rep, base) {
+    const get = r => base === 'items' ? r.n : base === 'service' ? r.serviceHours : r.waitHours;
+    const tot = rep.rows.reduce((a, r) => a + get(r), 0), rate = tot ? poolDollars / tot : NaN;
+    return { rate, rows: rep.rows.map(r => ({ pool: r.pool, base: get(r), dollars: rate * get(r), perItem: rate * get(r) / r.n })) };
+  };
+  C.indirectRate = (pool, base) => base ? pool / base : NaN;
+  // Fixed + variable pool. Rate is set at the estimated base, then applied to the actual base.
+  C.absorption = function (o) {
+    const budgetAt = b => o.fixed + o.varRate * b;
+    const rate = budgetAt(o.baseEst) / o.baseEst, applied = rate * o.baseAct, actualPool = budgetAt(o.baseAct);
+    return { rate, applied, actualPool, variance: applied - actualPool, rateActual: actualPool / o.baseAct, fixedShare: o.fixed / budgetAt(o.baseEst), budgetAt };
+  };
+  // items: [{base, p}] -> expected base = sum(base * probability of sale)
+  C.expectedVolume = items => items.reduce((a, x) => a + x.base * x.p, 0);
+  // Rate if the largest item is lost (small firms that depend on a few contracts)
+  C.rateIfLost = function (items, fixed, varRate) {
+    const exp = C.expectedVolume(items), big = items.reduce((m, x) => x.base * x.p > m.base * m.p ? x : m, items[0]);
+    const after = exp - big.base * big.p;
+    return { lost: big, before: (fixed + varRate * exp) / exp, after: after > 0 ? (fixed + varRate * after) / after : Infinity };
+  };
+  // history: [{proj, actual}] rates in percent -> signed relative error (proj-actual)/actual; positive = over-estimate
+  C.rateAccuracy = function (h) {
+    const e = h.map(x => (x.proj - x.actual) / x.actual);
+    return { errs: e, bias: C.mean(e), mae: C.mean(e.map(Math.abs)), nOver: e.filter(v => v > 0).length, nUnder: e.filter(v => v < 0).length };
+  };
+  // Cost build-up (doc 9.5): each element = direct dollars * (1 + overhead rate); G&A on total input.
+  C.applyRates = function (els, ga) {
+    const lines = els.map(e => ({ name: e.name, direct: e.direct, oh: e.direct * e.rate }));
+    const input = lines.reduce((a, l) => a + l.direct + l.oh, 0), gaD = input * ga;
+    return { lines, input, ga: gaD, total: input + gaD, indirectShare: (lines.reduce((a, l) => a + l.oh, 0) + gaD) / (input + gaD) };
+  };
+  // contracts: [{who, award, final}] growth = (final-award)/award. Flags are screening aids, not findings.
+  C.trackRecord = function (contracts, o) {
+    const by = new Map();
+    contracts.forEach(c => { if (!by.has(c.who)) by.set(c.who, []); by.get(c.who).push((c.final - c.award) / c.award); });
+    return [...by.entries()].map(([who, g]) => {
+      const up = g.filter(v => v > o.tol).length, down = g.filter(v => v < -o.tol).length, n = g.length;
+      let flag = 'ok';
+      if (n < o.minN) flag = 'short';
+      else if (up / n >= o.minShare) flag = 'under';
+      else if (down / n >= o.minShare) flag = 'over';
+      return { who, n, mean: C.mean(g), up, down, flag };
+    }).sort((a, b) => b.mean - a.mean);
+  };
+  // rows: [{ref,type:'direct'|'indirect',pool,amount}]
+  C.ledgerCheck = function (rows) {
+    const noPool = rows.filter(r => r.type === 'indirect' && !r.pool);
+    const types = new Map(); rows.forEach(r => { if (!types.has(r.ref)) types.set(r.ref, new Set()); types.get(r.ref).add(r.type); });
+    const dup = rows.filter(r => types.get(r.ref).size > 1);
+    const total = rows.reduce((a, r) => a + r.amount, 0), bad = new Set([...noPool, ...dup]);
+    const untraced = [...bad].reduce((a, r) => a + r.amount, 0);
+    const pools = new Map(); rows.filter(r => r.type === 'indirect' && r.pool).forEach(r => pools.set(r.pool, (pools.get(r.pool) || 0) + r.amount));
+    return { noPool, dup, total, untraced, share: total ? untraced / total : 0, pools };
+  };
   if (typeof module !== 'undefined' && module.exports) module.exports = C; else root.Core = C;
 })(typeof window !== 'undefined' ? window : globalThis);
